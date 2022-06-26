@@ -1,0 +1,2 @@
+# small-goal
+Quantitative trading
