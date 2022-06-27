@@ -56,9 +56,17 @@ public class TradeServiceImpl implements TradeService {
 	private String bar = "3m";
 	private String limit = "6";
 	private String data = "data";
+	private int skipCount = 0;
 
 	@Override
 	public void openPosition() {
+		// 是否跳过
+		if (skipCount > 0) {
+			skipCount--;
+			LOG.info("本次开仓流程跳过，当前跳过数skipCount：" + skipCount);
+			return;
+		}
+
 		pvClient = privateClient.getClient();
 		if (accountApi == null) {
 			accountApi = pvClient.createService(AccountApi.class);
@@ -70,13 +78,13 @@ public class TradeServiceImpl implements TradeService {
 		if (marketDataApi == null) {
 			marketDataApi = pbClient.createService(MarketDataApi.class);
 		}
+
 		// 当前是否有持仓
 		JSONObject positionsObject = pvClient.executeSync(accountApi.getPositions(instType, null, null));
 		JSONArray jsonArray = positionsObject.getJSONArray(data);
 		if (!jsonArray.isEmpty()) {
 			return;
 		}
-		LOG.info("是否有持仓：" + !jsonArray.isEmpty());
 		// 查询账户余额
 		JSONObject balanceObject = pvClient.executeSync(accountApi.getBalance(ccy));
 		JSONArray balanceArray = balanceObject.getJSONArray(data);
@@ -85,9 +93,9 @@ public class TradeServiceImpl implements TradeService {
 		JSONObject usdtBalance = detailsArray.getJSONObject(0);
 		BigDecimal usdtCashBal = usdtBalance.getBigDecimal("cashBal");
 		if (usdtCashBal.compareTo(new BigDecimal(15)) == -1) {
+			LOG.info("账号余额：" + usdtCashBal+",余额过低小于15");
 			return;
 		}
-//		LOG.info("账号余额：" + usdtCashBal);
 		// 查询市场数据，寻找下单时机
 		// 1、查询k线数据
 		JSONObject candlesticksSync = pbClient
@@ -95,12 +103,11 @@ public class TradeServiceImpl implements TradeService {
 		JSONArray candlesticksArray = candlesticksSync.getJSONArray(data);
 		// 2、计算rsi参数
 		double rsiResult = getRsi(candlesticksArray);
-		LOG.info("RSI指数：" + rsiResult);
+		LOG.info("当前没有持仓；RSI指数：" + rsiResult);
 
 		// 查询杠杆倍数
 		JSONObject leverAgeSync = pvClient.executeSync(accountApi.getLeverage(instId, mode));
 		String leverString = leverAgeSync.getJSONArray(data).getJSONObject(0).getString("lever");
-//		LOG.info("当前杠杆倍数：" + leverString);
 		if (!lever.equals(leverString)) {
 			// 设置杠杆倍速
 			SetLeverage setLeverage = new SetLeverage();
@@ -211,13 +218,13 @@ public class TradeServiceImpl implements TradeService {
 		if (jsonArray.isEmpty()) {
 			return;
 		}
-		LOG.info("是否有持仓：" + !jsonArray.isEmpty());
 		JSONObject uplRatioObject = jsonArray.getJSONObject(0);
 		BigDecimal uplRatio = uplRatioObject.getBigDecimal("uplRatio");
 		LOG.info("当前收益率：" + uplRatio);
-		if (uplRatio.compareTo(new BigDecimal("-0.10")) == -1) {// 达到强制止损线
-			LOG.info("达到强制止损线-10%");
+		if (uplRatio.compareTo(new BigDecimal("-0.0443")) == -1) {// 达到强制止损线
+			LOG.info("达到强制止损线-4.43%");
 			sell();
+			skipCount = 2;
 		}
 		// 判断是否达到止盈止损条件
 		// 1、查询k线数据
@@ -226,10 +233,14 @@ public class TradeServiceImpl implements TradeService {
 		JSONArray candlesticksArray = candlesticksSync.getJSONArray(data);
 		// 2、计算rsi参数
 		double rsiResult = getRsi(candlesticksArray);
-		LOG.info("RSI指数：" + rsiResult);
+		double pos = uplRatioObject.getDouble("pos").doubleValue();
+		if (pos > 0) {
+			LOG.info("当前持做多仓；RSI指数：" + rsiResult);
+		} else {
+			LOG.info("当前持做空仓；RSI指数：" + rsiResult);
+		}
 		double rsiLow = 35.0;
 		double rsiHigh = 65.0;
-		double pos = uplRatioObject.getDouble("pos").doubleValue();
 		if (pos > 0 && (uplRatio.compareTo(new BigDecimal("0.0512")) == 1) && rsiResult > rsiHigh) {
 			LOG.info("做多平仓收益率为：" + uplRatio + ";RSI指数为：" + rsiResult);
 			sell();
