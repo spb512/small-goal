@@ -3,9 +3,9 @@ package com.spb512.small.goal.utils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import com.okex.open.api.client.ApiClient;
-import com.okex.open.api.config.ApiConfiguration;
-import com.okex.open.api.enums.I18nEnum;
+import com.okx.open.api.client.ApiClient;
+import com.okx.open.api.config.ApiConfiguration;
+import com.okx.open.api.enums.I18nEnum;
 
 /**
  * @author spb512
@@ -14,7 +14,7 @@ import com.okex.open.api.enums.I18nEnum;
  */
 @Component
 public class PublicClient {
-	@Value("${okex.end.point}")
+	@Value("${okx.end.point}")
 	private String endPoint;
 	private ApiClient client;
 

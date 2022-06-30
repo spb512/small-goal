@@ -11,16 +11,19 @@ import org.springframework.stereotype.Service;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.okex.open.api.bean.account.param.SetLeverage;
-import com.okex.open.api.bean.trade.param.ClosePositions;
-import com.okex.open.api.bean.trade.param.PlaceOrder;
-import com.okex.open.api.client.ApiClient;
-import com.okex.open.api.service.account.impl.AccountApi;
-import com.okex.open.api.service.market.data.impl.MarketDataApi;
-import com.okex.open.api.service.trade.impl.TradeApi;
+import com.okx.open.api.bean.account.param.SetLeverage;
+import com.okx.open.api.bean.trade.param.ClosePositions;
+import com.okx.open.api.bean.trade.param.PlaceOrder;
+import com.okx.open.api.client.ApiClient;
+import com.okx.open.api.service.account.impl.AccountApi;
+import com.okx.open.api.service.market.data.impl.MarketDataApi;
+import com.okx.open.api.service.trade.impl.TradeApi;
+import com.spb512.small.goal.dto.IndicatorDto;
 import com.spb512.small.goal.service.TradeService;
 import com.spb512.small.goal.utils.PrivateClient;
 import com.spb512.small.goal.utils.PublicClient;
+import com.spb512.small.goal.utils.talib.FinStratEntity;
+import com.spb512.small.goal.utils.talib.FinStratModel;
 
 /**
  * @author spb512
@@ -30,13 +33,16 @@ import com.spb512.small.goal.utils.PublicClient;
 @Service
 public class TradeServiceImpl implements TradeService {
 
-	private static final Logger LOG = LoggerFactory.getLogger(TradeServiceImpl.class);
+	Logger logger = LoggerFactory.getLogger(getClass());
 
 	@Resource
 	private PublicClient publicClient;
 
 	@Resource
 	private PrivateClient privateClient;
+
+	@Resource
+	private FinStratModel finModel;
 
 	private ApiClient pvClient;
 
@@ -54,18 +60,15 @@ public class TradeServiceImpl implements TradeService {
 	private String instType = "SWAP";
 	private String ccy = "USDT";
 	private String bar = "3m";
-	private String limit = "6";
+	private String limit = "100";
 	private String data = "data";
 	private int skipCount = 0;
+	private double[] dHigh = new double[100];
+	private double[] dLow = new double[100];
+	private double[] dClose = new double[100];
 
 	@Override
 	public void openPosition() {
-		// 是否跳过
-		if (skipCount > 0) {
-			skipCount--;
-			LOG.info("本次开仓流程跳过，当前跳过数skipCount：" + skipCount);
-			return;
-		}
 
 		pvClient = privateClient.getClient();
 		if (accountApi == null) {
@@ -85,6 +88,24 @@ public class TradeServiceImpl implements TradeService {
 		if (!jsonArray.isEmpty()) {
 			return;
 		}
+
+		// 查询k线数据
+		JSONObject candlesticksSync = pbClient
+				.executeSync(marketDataApi.getCandlesticks(instId, null, null, bar, limit));
+		JSONArray candlesticksArray = candlesticksSync.getJSONArray(data);
+		// 计算sar和rsi指标
+		IndicatorDto indicatorDto = getIndicators(candlesticksArray);
+		double rsi = indicatorDto.getRsi();
+		double sar = indicatorDto.getSar();
+		Double highPrice = candlesticksArray.getJSONArray(0).getDouble(2);
+		Double lowPrice = candlesticksArray.getJSONArray(0).getDouble(3);
+		Double currentPrice = candlesticksArray.getJSONArray(0).getDouble(4);
+		// 是否跳过
+		if (skipCount > 0) {
+			skipCount--;
+			logger.info("本次开仓流程跳过，当前跳过数skipCount：" + skipCount + ";RSI指标:" + rsi);
+			return;
+		}
 		// 查询账户余额
 		JSONObject balanceObject = pvClient.executeSync(accountApi.getBalance(ccy));
 		JSONArray balanceArray = balanceObject.getJSONArray(data);
@@ -93,17 +114,9 @@ public class TradeServiceImpl implements TradeService {
 		JSONObject usdtBalance = detailsArray.getJSONObject(0);
 		BigDecimal usdtCashBal = usdtBalance.getBigDecimal("cashBal");
 		if (usdtCashBal.compareTo(new BigDecimal(15)) == -1) {
-			LOG.info("账号余额：" + usdtCashBal+",余额过低小于15");
+			logger.info("账号余额：" + usdtCashBal + ",余额过低小于15;" + "RSI指标:" + rsi);
 			return;
 		}
-		// 查询市场数据，寻找下单时机
-		// 1、查询k线数据
-		JSONObject candlesticksSync = pbClient
-				.executeSync(marketDataApi.getCandlesticks(instId, null, null, bar, limit));
-		JSONArray candlesticksArray = candlesticksSync.getJSONArray(data);
-		// 2、计算rsi参数
-		double rsiResult = getRsi(candlesticksArray);
-		LOG.info("当前没有持仓；RSI指数：" + rsiResult);
 
 		// 查询杠杆倍数
 		JSONObject leverAgeSync = pvClient.executeSync(accountApi.getLeverage(instId, mode));
@@ -115,30 +128,46 @@ public class TradeServiceImpl implements TradeService {
 			setLeverage.setLever(lever);
 			setLeverage.setMgnMode(mode);
 			pvClient.executeSync(accountApi.setLeverage(JSONObject.parseObject(JSON.toJSONString(setLeverage))));
-			LOG.info("设置杠杆倍速为" + lever + "成功");
+			logger.info("设置杠杆倍速为" + lever + "成功");
 		}
 
-		if (rsiResult == 110) {
-			return;
-		}
 		// 开仓
-		double rsiLow = 20.0;
-		double rsiHigh = 80.0;
-		if (rsiResult < rsiLow || rsiResult > rsiHigh) {
-			Double currentPrice = candlesticksArray.getJSONArray(candlesticksArray.size() - 1).getDouble(4);
+		double lowRsi = 20.0;
+		double highRsi = 80.0;
+		String trend = ";SAR指标:趋势不明";
+		if (lowPrice >= sar) {// 上升趋势
+			lowRsi = 20.0;
+			highRsi = 85.0;
+			trend = ";SAR指标:上升趋势" + sar;
+		}
+		if (highPrice <= sar) {// 下降趋势
+			lowRsi = 15.0;
+			highRsi = 80.0;
+			trend = ";SAR指标:下降趋势" + sar;
+		}
+		if (sar > lowPrice && sar < highPrice) {
+			logger.info("高:" + highPrice + ";低:" + lowPrice + ";SAR:" + sar);
+		}
+		logger.info("当前没有持仓;RSI指标：" + indicatorDto.getRsi() + trend);
+		if (rsi < lowRsi || rsi > highRsi) {
 			// 获取最大开仓数量
 			JSONObject maxImun = pvClient.executeSync(
 					accountApi.getMaximumTradableSizeForInstrument(instId, mode, null, currentPrice.toString()));
 			JSONArray maxInumArray = maxImun.getJSONArray(data);
 			JSONObject maxInumObject = maxInumArray.getJSONObject(0);
-			BigDecimal maxBuy = maxInumObject.getBigDecimal("maxBuy").multiply(new BigDecimal("0.618"));
-			BigDecimal maxSell = maxInumObject.getBigDecimal("maxSell").multiply(new BigDecimal("0.618"));
-			LOG.info("最大购买数量" + maxBuy + "；最大可卖数量：" + maxSell);
+			long maxBuy = maxInumObject.getBigDecimal("maxBuy").multiply(new BigDecimal("0.90")).longValue();
+			long maxSell = maxInumObject.getBigDecimal("maxSell").multiply(new BigDecimal("0.90")).longValue();
+			if (maxBuy > 4500 || maxSell > 4500) {
+				maxBuy = 4500;
+				maxSell = 4500;
+			}
 
 			String side = "buy";
 			String direction = "做多";
-			BigDecimal szNum = maxBuy;
-			if (rsiResult > rsiHigh) {
+			long szNum = maxBuy;
+
+			logger.info("最大购买数量" + maxBuy + "；最大可卖数量：" + maxSell);
+			if (rsi > lowRsi) {
 				side = "sell";
 				szNum = maxSell;
 				direction = "做空";
@@ -148,52 +177,42 @@ public class TradeServiceImpl implements TradeService {
 			placeOrder.setTdMode(mode);
 			placeOrder.setSide(side);
 			placeOrder.setOrdType("market");
-			placeOrder.setSz(szNum.longValue() + "");// 委托数量
+			placeOrder.setSz(szNum + "");// 委托数量
 			JSONObject orderSync = pvClient
 					.executeSync(this.tradeApi.placeOrder(JSONObject.parseObject(JSON.toJSONString(placeOrder))));
 			JSONArray orderArray = orderSync.getJSONArray(data);
 			JSONObject order = orderArray.getJSONObject(0);
-			TradeServiceImpl.LOG.info("RSI指标：" + rsiResult + "；开" + direction + "仓成功，订单号ordId："
-					+ order.getString("ordId") + "；执行结果sCode：" + order.getString("sCode") + "；执行信息sMsg："
-					+ order.getString("sMsg") + "=======>当前余额：" + usdtCashBal);
+			logger.info("RSI指标：" + rsi + "；开" + direction + "仓成功，订单号ordId：" + order.getString("ordId") + "；执行结果sCode："
+					+ order.getString("sCode") + "；执行信息sMsg：" + order.getString("sMsg") + "=======>当前余额：" + usdtCashBal
+					+ trend);
 
 		}
 	}
 
-	/**
-	 * UP_AVG = UP_AMOUNT/PERIODS (周期内上涨数量平均); DOWN_AVG =
-	 * DOWN_AMOUNT/PERIODS（周期内下跌数量平均）; RS = UP_AVG/DOWN_AVG（相对平均）; RSI = 100 - 100 /
-	 * (1 + RS) （相对强弱指数）;
-	 * RS（相对强度）=N日内收盘价涨数[close-open]和之均值÷N日内收盘价跌数[open-close]和之均值;
-	 * RSI（相对强弱指标）=100－100÷（1+RS）;
-	 * 
-	 * @param candlesticksArray
-	 * @return
-	 */
-	private double getRsi(JSONArray candlesticksArray) {
-		double upAvg = 0;
-		double downAvg = 0;
-		int periods = 6;
-
-		for (int i = (candlesticksArray.size() - 6); i < candlesticksArray.size(); i++) {
+	private IndicatorDto getIndicators(JSONArray candlesticksArray) {
+		int j = 99;
+		for (int i = 0; i < candlesticksArray.size(); i++) {
 			JSONArray jsonArray = candlesticksArray.getJSONArray(i);
-			Double openPrice = jsonArray.getDouble(1);
-			Double closePrice = jsonArray.getDouble(4);
-			// 价格上涨;
-			if (closePrice >= openPrice) {
-				upAvg += closePrice - openPrice;
-			} else {// 价格下跌;
-				downAvg += openPrice - closePrice;
-			}
+			dHigh[j] = jsonArray.getDouble(2);
+			dLow[j] = jsonArray.getDouble(3);
+			dClose[j] = jsonArray.getDouble(4);
+			j--;
 		}
-		upAvg = upAvg / periods;
-		downAvg = downAvg / periods;
-		if (downAvg == 0) {
-			return 110;
-		}
-		double rs = upAvg / downAvg;
-		double rsiResult = 100 - 100 / (1 + rs);
-		return rsiResult;
+		FinStratEntity finEntity = finModel.calSar(dHigh, dLow, 0.02, 0.2);
+		double dSar[] = finEntity.getSarReal();
+
+		FinStratEntity rsiFinEntity = finModel.calRsi(dClose, 6);
+		double dRsi[] = rsiFinEntity.getSarReal();
+//		logger.info("dHigh:" + Arrays.toString(dHigh));
+//		logger.info("dLow:" + Arrays.toString(dLow));
+//		logger.info("dSar:" + Arrays.toString(dSar));
+
+//		logger.info("dClose:" + Arrays.toString(dClose));
+//		logger.info("dRsi:" + Arrays.toString(dRsi));
+		IndicatorDto indicatorDto = new IndicatorDto();
+		indicatorDto.setSar(dSar[dSar.length - 1]);
+		indicatorDto.setRsi(dRsi[dRsi.length - 1]);
+		return indicatorDto;
 	}
 
 	/**
@@ -220,33 +239,44 @@ public class TradeServiceImpl implements TradeService {
 		}
 		JSONObject uplRatioObject = jsonArray.getJSONObject(0);
 		BigDecimal uplRatio = uplRatioObject.getBigDecimal("uplRatio");
-		LOG.info("当前收益率：" + uplRatio);
-		if (uplRatio.compareTo(new BigDecimal("-0.0443")) == -1) {// 达到强制止损线
-			LOG.info("达到强制止损线-4.43%");
-			sell();
-			skipCount = 2;
-		}
+
 		// 判断是否达到止盈止损条件
 		// 1、查询k线数据
 		JSONObject candlesticksSync = pbClient
 				.executeSync(marketDataApi.getCandlesticks(instId, null, null, bar, limit));
 		JSONArray candlesticksArray = candlesticksSync.getJSONArray(data);
-		// 2、计算rsi参数
-		double rsiResult = getRsi(candlesticksArray);
+		// 2、计算SAR指数和RSI指数
+		IndicatorDto indicatorDto = getIndicators(candlesticksArray);
+		double rsi = indicatorDto.getRsi();
 		double pos = uplRatioObject.getDouble("pos").doubleValue();
-		if (pos > 0) {
-			LOG.info("当前持做多仓；RSI指数：" + rsiResult);
-		} else {
-			LOG.info("当前持做空仓；RSI指数：" + rsiResult);
+		double sar = indicatorDto.getSar();
+		Double highPrice = candlesticksArray.getJSONArray(0).getDouble(2);
+		Double lowPrice = candlesticksArray.getJSONArray(0).getDouble(3);
+
+		double rsiLow = 30.0;
+		double rsiHigh = 70.0;
+		String trend = ";SAR指标:默认状态";
+		if (lowPrice >= sar) {// 上升趋势
+			rsiLow = 30.0;
+			rsiHigh = 75.0;
+			trend = ";SAR指标:上升趋势" + sar;
 		}
-		double rsiLow = 35.0;
-		double rsiHigh = 65.0;
-		if (pos > 0 && (uplRatio.compareTo(new BigDecimal("0.0512")) == 1) && rsiResult > rsiHigh) {
-			LOG.info("做多平仓收益率为：" + uplRatio + ";RSI指数为：" + rsiResult);
+		if (highPrice <= sar) {// 下降趋势
+			rsiLow = 25.0;
+			rsiHigh = 70.0;
+			trend = ";SAR指标:下降趋势" + sar;
+		}
+		if (pos > 0) {
+			logger.info("当前持做多仓；RSI指标：" + rsi + ";当前收益率：" + uplRatio + trend);
+		} else {
+			logger.info("当前持做空仓；RSI指标：" + rsi + ";当前收益率：" + uplRatio + trend);
+		}
+		if (pos > 0 && rsi > rsiHigh) {
+			logger.info("做多平仓收益率为：" + uplRatio + ";RSI指数为：" + rsi + trend);
 			sell();
 		}
-		if (pos < 0 && (uplRatio.compareTo(new BigDecimal("0.0512")) == 1) && rsiResult < rsiLow) {
-			LOG.info("做空平仓收益率为：" + uplRatio + ";RSI指数为：" + rsiResult);
+		if (pos < 0 && rsi < rsiLow) {
+			logger.info("做空平仓收益率为：" + uplRatio + ";RSI指数为：" + rsi + trend);
 			sell();
 		}
 
@@ -263,8 +293,29 @@ public class TradeServiceImpl implements TradeService {
 		JSONArray detailsArray = jsonObject.getJSONArray("details");
 		JSONObject usdtBalance = detailsArray.getJSONObject(0);
 		BigDecimal usdtCashBal = usdtBalance.getBigDecimal("cashBal");
-		LOG.info("平仓操作code：" + closePosition.getString("code") + ";msg:" + closePosition.getString("msg")
+		logger.info("平仓操作code：" + closePosition.getString("code") + ";msg:" + closePosition.getString("msg")
 				+ ";=========>当前余额：" + usdtCashBal);
 	}
 
+	@Override
+	public void checkPosition() {
+		pvClient = privateClient.getClient();
+		if (accountApi == null) {
+			accountApi = pvClient.createService(AccountApi.class);
+		}
+		// 当前是否有持仓
+		JSONObject positionsObject = pvClient.executeSync(accountApi.getPositions(instType, null, null));
+		JSONArray jsonArray = positionsObject.getJSONArray(data);
+		if (jsonArray.isEmpty()) {
+			return;
+		}
+		JSONObject uplRatioObject = jsonArray.getJSONObject(0);
+		BigDecimal uplRatio = uplRatioObject.getBigDecimal("uplRatio");
+		if (uplRatio.compareTo(new BigDecimal("-0.0214")) == -1) {// 达到强制止损线
+			logger.info("当前收益率：" + uplRatio);
+			logger.info("达到强制止损线-2.14%");
+			sell();
+			skipCount = 5;
+		}
+	}
 }

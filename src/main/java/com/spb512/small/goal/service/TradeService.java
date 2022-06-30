@@ -17,4 +17,9 @@ public interface TradeService {
 	 */
 	void closePosition();
 
+	/**
+	 * 检查持仓
+	 */
+	void checkPosition();
+
 }

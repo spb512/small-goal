@@ -36,8 +36,15 @@
 
 		<dependency>
 			<groupId>com.okcoin.commons</groupId>
-			<artifactId>okex-java-sdk-api</artifactId>
+			<artifactId>okx-java-sdk-api</artifactId>
 			<version>1.0.0</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/com.tictactec/ta-lib -->
+		<dependency>
+			<groupId>com.tictactec</groupId>
+			<artifactId>ta-lib</artifactId>
+			<version>0.4.0</version>
 		</dependency>
 	</dependencies>
 

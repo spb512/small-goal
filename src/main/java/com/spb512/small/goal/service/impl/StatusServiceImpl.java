@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.okex.open.api.service.status.impl.StatusDataApi;
+import com.okx.open.api.service.status.impl.StatusDataApi;
 import com.spb512.small.goal.dto.StatusDto;
 import com.spb512.small.goal.service.StatusService;
 import com.spb512.small.goal.utils.PublicClient;
