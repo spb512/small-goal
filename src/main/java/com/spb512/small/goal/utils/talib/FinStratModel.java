@@ -66,4 +66,35 @@ public class FinStratModel {
 		}
 		return fiResult;
 	}
+
+	/**
+	 * 计算平滑异同移动平均线(MACD)
+	 * 
+	 * @param inReal          收盘价
+	 * @param optFastPeriod   快速移动平均线（因子 12日EMA）
+	 * @param optSlowPeriod   慢速移动平均线（因子 26日EMA）
+	 * @param optSignalPeriod DEA移动平均线(因子 9日EMA)
+	 * @return RSI数据
+	 */
+	public FinStratEntity calMacd(double inReal[], int optFastPeriod, int optSlowPeriod, int optSignalPeriod) {
+		// 指标计算结果
+		FinStratEntity fiResult = new FinStratEntity();
+
+		// 基础计算库
+		int startIdx = 0;
+		int endIdx = inReal.length - 1;
+		double[] macd = new double[inReal.length - 33];
+		double[] macdSignal = new double[inReal.length - 33];
+		double[] macdHist = new double[inReal.length - 33];
+		RetCode retCode = this.finLib.macd(startIdx, endIdx, inReal, optFastPeriod, optSlowPeriod, optSignalPeriod,
+				new MInteger(), new MInteger(), macd, macdSignal, macdHist);
+
+		if (retCode == RetCode.Success) {
+			fiResult.setRetCode(0);
+			fiResult.setDifMacd(macd);
+			fiResult.setDeaMacd(macdSignal);
+			fiResult.setHistMacd(macdHist);
+		}
+		return fiResult;
+	}
 }
