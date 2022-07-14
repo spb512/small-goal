@@ -8,12 +8,15 @@ package com.spb512.small.goal.dto;
 public class IndicatorDto {
 
 	private double sar;
-	private double rsi;
+	private double rsi6;
+	private double rsi12;
+	private double rsi24;
 	private double diff;
 	private double dea;
 	private double stick;
 	private int sarTurningPoint;
 	private int macdTurningPoint;
+//	private int macdTwoTurningPoint;
 
 	public double getSar() {
 		return sar;
@@ -23,12 +26,28 @@ public class IndicatorDto {
 		this.sar = sar;
 	}
 
-	public double getRsi() {
-		return rsi;
+	public double getRsi12() {
+		return rsi12;
 	}
 
-	public void setRsi(double rsi) {
-		this.rsi = rsi;
+	public double getRsi6() {
+		return rsi6;
+	}
+
+	public void setRsi6(double rsi6) {
+		this.rsi6 = rsi6;
+	}
+
+	public void setRsi12(double rsi12) {
+		this.rsi12 = rsi12;
+	}
+
+	public double getRsi24() {
+		return rsi24;
+	}
+
+	public void setRsi24(double rsi24) {
+		this.rsi24 = rsi24;
 	}
 
 	public double getDiff() {
@@ -70,5 +89,13 @@ public class IndicatorDto {
 	public void setMacdTurningPoint(int macdTurningPoint) {
 		this.macdTurningPoint = macdTurningPoint;
 	}
+
+//	public int getMacdTwoTurningPoint() {
+//		return macdTwoTurningPoint;
+//	}
+//
+//	public void setMacdTwoTurningPoint(int macdTwoTurningPoint) {
+//		this.macdTwoTurningPoint = macdTwoTurningPoint;
+//	}
 
 }
