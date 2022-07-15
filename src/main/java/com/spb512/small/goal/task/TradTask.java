@@ -31,7 +31,7 @@ public class TradTask {
 	/**
 	 * 每43秒执行一次
 	 */
-	@Scheduled(cron = "0/10 * * * * ?")
+	@Scheduled(cron = "0/2 * * * * ?")
 	public void openPositionTask() {
 //		logger.info("开仓");
 		tradeService.openPosition();
@@ -40,7 +40,7 @@ public class TradTask {
 	/**
 	 * 每27秒执行一次
 	 */
-	@Scheduled(cron = "0/10 * * * * ?")
+	@Scheduled(cron = "0/2 * * * * ?")
 	public void closePositionTask() {
 //		logger.info("平仓");
 		tradeService.closePosition();
@@ -49,10 +49,10 @@ public class TradTask {
 	/**
 	 * 每5秒执行一次
 	 */
-//	@Scheduled(cron = "0/5 * * * * ?")
-//	public void checkPositionTask() {
+	@Scheduled(cron = "0/1 * * * * ?")
+	public void checkPositionTask() {
 //		logger.info("检查持仓");
-//		tradeService.checkPosition();
-//	}
+		tradeService.checkPosition();
+	}
 
 }

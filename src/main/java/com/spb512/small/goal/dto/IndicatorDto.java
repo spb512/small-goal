@@ -16,7 +16,7 @@ public class IndicatorDto {
 	private double stick;
 	private int sarTurningPoint;
 	private int macdTurningPoint;
-//	private int macdTwoTurningPoint;
+	private int singleMacdTurningPoint;
 
 	public double getSar() {
 		return sar;
@@ -88,6 +88,14 @@ public class IndicatorDto {
 
 	public void setMacdTurningPoint(int macdTurningPoint) {
 		this.macdTurningPoint = macdTurningPoint;
+	}
+
+	public int getSingleMacdTurningPoint() {
+		return singleMacdTurningPoint;
+	}
+
+	public void setSingleMacdTurningPoint(int singleMacdTurningPoint) {
+		this.singleMacdTurningPoint = singleMacdTurningPoint;
 	}
 
 //	public int getMacdTwoTurningPoint() {
