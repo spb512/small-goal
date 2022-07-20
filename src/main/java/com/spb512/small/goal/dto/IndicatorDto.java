@@ -17,6 +17,7 @@ public class IndicatorDto {
 	private int sarTurningPoint;
 	private int macdTurningPoint;
 	private int singleMacdTurningPoint;
+	private double[] rsi6Arr;
 
 	public double getSar() {
 		return sar;
@@ -96,6 +97,14 @@ public class IndicatorDto {
 
 	public void setSingleMacdTurningPoint(int singleMacdTurningPoint) {
 		this.singleMacdTurningPoint = singleMacdTurningPoint;
+	}
+
+	public double[] getRsi6Arr() {
+		return rsi6Arr;
+	}
+
+	public void setRsi6Arr(double[] rsi6Arr) {
+		this.rsi6Arr = rsi6Arr;
 	}
 
 //	public int getMacdTwoTurningPoint() {
