@@ -2,8 +2,6 @@ package com.spb512.small.goal.service.impl;
 
 import java.math.BigDecimal;
 
-import javax.annotation.Resource;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -25,6 +23,8 @@ import com.spb512.small.goal.utils.PrivateClient;
 import com.spb512.small.goal.utils.PublicClient;
 import com.spb512.small.goal.utils.talib.FinStratEntity;
 import com.spb512.small.goal.utils.talib.FinStratModel;
+
+import jakarta.annotation.Resource;
 
 /**
  * @author spb512
@@ -150,13 +150,13 @@ public class TradeServiceImpl implements TradeService {
 			logger.info("高:" + highPrice + ";低:" + lowPrice + ";SAR:" + sar);
 		}
 //		logger.info("当前没有持仓;RSI指标：" + indicatorDto.getRsi12() + trend);
-		int turningPoint = indicatorDto.getMacdTurningPoint();
-		boolean upFlag = turningPoint == 0;
-		boolean lowFlag = turningPoint == 1;
-//		int highRsi = 80;
-//		int lowRsi = 20;
+//		int turningPoint = indicatorDto.getMacdTurningPoint();
+//		boolean upFlag = turningPoint == 0;
+//		boolean lowFlag = turningPoint == 1;
+		int highRsi = 82;
+		int lowRsi = 18;
 //		if (rsi24 > 70) {
-//			highRsi = 90;
+//			highRsi = 85;
 //		}
 //		if (rsi24 < 30) {
 //			lowRsi = 15;
@@ -179,7 +179,7 @@ public class TradeServiceImpl implements TradeService {
 //		if (rsi6Arr[0] > 30 && rsi6Arr[1] > 30 && rsi6Arr[2] > 30 && rsi6Arr[3] > 30 && rsi6Arr[4] < 30) {
 //			firstRsi30 = true;
 //		}
-		if (upFlag || lowFlag) {
+		if (rsi12 < lowRsi || rsi12 > highRsi) {
 			// 获取最大开仓数量
 			JSONObject maxImun = pvClient.executeSync(
 					accountApi.getMaximumTradableSizeForInstrument(instId, mode, null, currentPrice.toString()));
@@ -197,7 +197,7 @@ public class TradeServiceImpl implements TradeService {
 			long szNum = maxBuy;
 
 			logger.info("最大购买数量" + maxBuy + "；最大可卖数量：" + maxSell);
-			if (lowFlag) {
+			if (rsi12 > highRsi) {
 				side = "sell";
 				szNum = maxSell;
 				direction = "做空";
@@ -350,7 +350,7 @@ public class TradeServiceImpl implements TradeService {
 		}
 		JSONObject uplRatioObject = jsonArray.getJSONObject(0);
 		BigDecimal uplRatio = uplRatioObject.getBigDecimal("uplRatio");
-		long cTime = uplRatioObject.getLongValue("cTime");
+//		long cTime = uplRatioObject.getLongValue("cTime");
 
 		// 判断是否达到止盈止损条件
 		// 1、查询k线数据(标记价格)
@@ -362,7 +362,7 @@ public class TradeServiceImpl implements TradeService {
 		double rsi6 = indicatorDto.getRsi6();
 		double rsi12 = indicatorDto.getRsi12();
 		double rsi24 = indicatorDto.getRsi24();
-		double pos = uplRatioObject.getDouble("pos").doubleValue();
+//		double pos = uplRatioObject.getDouble("pos").doubleValue();
 		double sar = indicatorDto.getSar();
 		Double highPrice = candlesticksArray.getJSONArray(0).getDouble(2);
 		Double lowPrice = candlesticksArray.getJSONArray(0).getDouble(3);
@@ -380,24 +380,24 @@ public class TradeServiceImpl implements TradeService {
 //			logger.info("当前持做空仓；RSI指标：" + rsi12 + ";当前收益率：" + uplRatio + trend);
 //		}
 
-		int turningPoint = indicatorDto.getSingleMacdTurningPoint();
-		boolean macdUpFlag = turningPoint == 0;
-		boolean macdLowFlag = turningPoint == 1;
+//		int turningPoint = indicatorDto.getSingleMacdTurningPoint();
+//		boolean macdUpFlag = turningPoint == 0;
+//		boolean macdLowFlag = turningPoint == 1;
 
-		JSONObject executeSync = pbClient.executeSync(publicDataApi.getSystemTime());
-		JSONArray sytmTimeData = executeSync.getJSONArray(data);
-		long systmTime = sytmTimeData.getJSONObject(0).getLongValue("ts");
-		boolean timeFlag = (systmTime - cTime) > intBar * 5 * 60 * 1000;// 平仓前至少需要持仓5个周期
+//		JSONObject executeSync = pbClient.executeSync(publicDataApi.getSystemTime());
+//		JSONArray sytmTimeData = executeSync.getJSONArray(data);
+//		long systmTime = sytmTimeData.getJSONObject(0).getLongValue("ts");
+//		boolean timeFlag = (systmTime - cTime) > intBar * 5 * 60 * 1000;// 平仓前至少需要持仓5个周期
 
-		if (uplRatio.compareTo(new BigDecimal("0.015")) > -1) {
+		if (uplRatio.compareTo(new BigDecimal("0.10")) > -1) {
 			if (uplRatio.compareTo(highestUplRatio) == 1) {
 				highestUplRatio = uplRatio;
 				logger.info("highestUplRatio更新，当前为：" + highestUplRatio + ";rsi6指数为：" + rsi6 + ";rsi12指数为：" + rsi12
 						+ ";rsi24指数为：" + rsi24 + trend);
 			}
 		}
-		if (highestUplRatio.compareTo(new BigDecimal("0.015")) > -1) {
-			if (uplRatio.compareTo(highestUplRatio.subtract(new BigDecimal("0.005"))) < 1) {
+		if (highestUplRatio.compareTo(new BigDecimal("0.10")) > -1) {
+			if (uplRatio.compareTo(highestUplRatio.subtract(new BigDecimal("0.01"))) < 1) {
 				logger.info("highestUplRatio当前为：" + highestUplRatio);
 				sell();
 				logger.info("常规平仓收益率为：" + uplRatio + ";rsi6指数为：" + rsi6 + ";rsi12指数为：" + rsi12 + ";rsi24指数为：" + rsi24
@@ -432,16 +432,16 @@ public class TradeServiceImpl implements TradeService {
 //					"做空平仓收益率为：" + uplRatio + ";rsi6指数为：" + rsi6 + ";rsi12指数为：" + rsi12 + ";rsi24指数为：" + rsi24 + trend);
 //			sell();
 //		}
-		if (pos > 0 && timeFlag && macdLowFlag) {
-			logger.info(
-					"做多平仓收益率为：" + uplRatio + ";rsi6指数为：" + rsi6 + ";rsi12指数为：" + rsi12 + ";rsi24指数为：" + rsi24 + trend);
-			sell();
-		}
-		if (pos < 0 && timeFlag && macdUpFlag) {
-			logger.info(
-					"做空平仓收益率为：" + uplRatio + ";rsi6指数为：" + rsi6 + ";rsi12指数为：" + rsi12 + ";rsi24指数为：" + rsi24 + trend);
-			sell();
-		}
+//		if (pos > 0 && timeFlag && macdLowFlag) {
+//			logger.info(
+//					"做多平仓收益率为：" + uplRatio + ";rsi6指数为：" + rsi6 + ";rsi12指数为：" + rsi12 + ";rsi24指数为：" + rsi24 + trend);
+//			sell();
+//		}
+//		if (pos < 0 && timeFlag && macdUpFlag) {
+//			logger.info(
+//					"做空平仓收益率为：" + uplRatio + ";rsi6指数为：" + rsi6 + ";rsi12指数为：" + rsi12 + ";rsi24指数为：" + rsi24 + trend);
+//			sell();
+//		}
 	}
 
 	private synchronized void sell() {
@@ -477,9 +477,9 @@ public class TradeServiceImpl implements TradeService {
 		}
 		JSONObject uplRatioObject = jsonArray.getJSONObject(0);
 		BigDecimal uplRatio = uplRatioObject.getBigDecimal("uplRatio");
-		if (uplRatio.compareTo(new BigDecimal("-0.025")) == -1) {// 达到强制止损线
+		if (uplRatio.compareTo(new BigDecimal("-0.25")) == -1) {// 达到强制止损线
 			logger.info("当前收益率：" + uplRatio);
-			logger.info("达到强制止损线-2.5%");
+			logger.info("达到强制止损线-25%");
 			sell();
 		}
 	}

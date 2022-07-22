@@ -1,7 +1,5 @@
 package com.spb512.small.goal.task;
 
-import javax.annotation.Resource;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
@@ -11,6 +9,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.spb512.small.goal.service.TradeService;
+
+import jakarta.annotation.Resource;
 
 /**
  * @author spb512
@@ -29,7 +29,7 @@ public class TradTask {
 	private TradeService tradeService;
 
 	/**
-	 * 每43秒执行一次
+	 * 每1秒执行一次
 	 */
 	@Scheduled(cron = "0/1 * * * * ?")
 	public void openPositionTask() {
@@ -38,7 +38,7 @@ public class TradTask {
 	}
 
 	/**
-	 * 每27秒执行一次
+	 * 每1秒执行一次
 	 */
 	@Scheduled(cron = "0/1 * * * * ?")
 	public void closePositionTask() {
@@ -47,7 +47,7 @@ public class TradTask {
 	}
 
 	/**
-	 * 每5秒执行一次
+	 * 每1秒执行一次
 	 */
 	@Scheduled(cron = "0/1 * * * * ?")
 	public void checkPositionTask() {
