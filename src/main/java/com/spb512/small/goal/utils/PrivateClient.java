@@ -22,6 +22,10 @@ public class PrivateClient {
 	private String secreKey;
 	@Value("${okx.passphrase}")
 	private String passphrase;
+	@Value("${okx.simulated}")
+	private int simulated;
+	@Value("${okx.proxyed}")
+	private boolean proxyed;
 	private ApiClient client;
 
 	public ApiClient getClient() {
@@ -32,6 +36,8 @@ public class PrivateClient {
 			config.setSecretKey(secreKey);
 			config.setPassphrase(passphrase);
 			config.setPrint(false);
+			config.setSimulated(simulated);
+			config.setProxyed(proxyed);
 			/* config.setI18n(I18nEnum.SIMPLIFIED_CHINESE); */
 			config.setI18n(I18nEnum.ENGLISH);
 			client = new ApiClient(config);

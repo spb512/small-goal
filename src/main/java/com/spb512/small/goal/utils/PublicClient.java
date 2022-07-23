@@ -16,6 +16,10 @@ import com.okx.open.api.enums.I18nEnum;
 public class PublicClient {
 	@Value("${okx.end.point}")
 	private String endPoint;
+	@Value("${okx.simulated}")
+	private int simulated;
+	@Value("${okx.proxyed}")
+	private boolean proxyed;
 	private ApiClient client;
 
 	public ApiClient getClient() {
@@ -25,6 +29,8 @@ public class PublicClient {
 			config.setPrint(false);
 			/* config.setI18n(I18nEnum.SIMPLIFIED_CHINESE); */
 			config.setI18n(I18nEnum.ENGLISH);
+			config.setSimulated(simulated);
+			config.setProxyed(proxyed);
 			client = new ApiClient(config);
 		}
 		return client;

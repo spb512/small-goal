@@ -2,8 +2,11 @@ package com.spb512.small.goal.service.impl;
 
 import java.math.BigDecimal;
 
+import javax.annotation.PostConstruct;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.alibaba.fastjson.JSON;
@@ -24,8 +27,6 @@ import com.spb512.small.goal.utils.PublicClient;
 import com.spb512.small.goal.utils.talib.FinStratEntity;
 import com.spb512.small.goal.utils.talib.FinStratModel;
 
-import jakarta.annotation.Resource;
-
 /**
  * @author spb512
  * @date 2022年6月19日 下午9:46:37
@@ -36,13 +37,13 @@ public class TradeServiceImpl implements TradeService {
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
-	@Resource
+	@Autowired
 	private PublicClient publicClient;
 
-	@Resource
+	@Autowired
 	private PrivateClient privateClient;
 
-	@Resource
+	@Autowired
 	private FinStratModel finModel;
 
 	private ApiClient pvClient;
@@ -72,10 +73,15 @@ public class TradeServiceImpl implements TradeService {
 	private double[] dLow = new double[Integer.parseInt(limit)];
 	private double[] dClose = new double[Integer.parseInt(limit)];
 
+	@PostConstruct
+	public void init() {
+		pvClient = privateClient.getClient();
+		pbClient = publicClient.getClient();
+	}
+
 	@Override
 	public synchronized void openPosition() {
 
-		pvClient = privateClient.getClient();
 		if (accountApi == null) {
 			accountApi = pvClient.createService(AccountApi.class);
 			// 查询杠杆倍数
@@ -94,7 +100,7 @@ public class TradeServiceImpl implements TradeService {
 		if (tradeApi == null) {
 			tradeApi = pvClient.createService(TradeApi.class);
 		}
-		pbClient = publicClient.getClient();
+
 		if (marketDataApi == null) {
 			marketDataApi = pbClient.createService(MarketDataApi.class);
 		}
@@ -331,14 +337,14 @@ public class TradeServiceImpl implements TradeService {
 	 */
 	@Override
 	public void closePosition() {
-		pvClient = privateClient.getClient();
+
 		if (accountApi == null) {
 			accountApi = pvClient.createService(AccountApi.class);
 		}
 		if (tradeApi == null) {
 			tradeApi = pvClient.createService(TradeApi.class);
 		}
-		pbClient = publicClient.getClient();
+
 		if (marketDataApi == null) {
 			marketDataApi = pbClient.createService(MarketDataApi.class);
 		}
@@ -465,7 +471,7 @@ public class TradeServiceImpl implements TradeService {
 
 	@Override
 	public synchronized void checkPosition() {
-		pvClient = privateClient.getClient();
+
 		if (accountApi == null) {
 			accountApi = pvClient.createService(AccountApi.class);
 		}

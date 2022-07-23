@@ -18,5 +18,15 @@
     "name": "okx.passphrase",
     "type": "java.lang.String",
     "description": "A description for 'okx.passphrase'"
+  },
+  {
+    "name": "okx.simulated",
+    "type": "java.lang.String",
+    "description": "A description for 'okx.simulated'"
+  },
+  {
+    "name": "okx.proxyed",
+    "type": "java.lang.String",
+    "description": "A description for 'okx.proxyed'"
   }
 ]}
