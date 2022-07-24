@@ -94,7 +94,7 @@ public class TradeServiceImpl implements TradeService {
 				setLeverage.setLever(lever);
 				setLeverage.setMgnMode(mode);
 				pvClient.executeSync(accountApi.setLeverage(JSONObject.parseObject(JSON.toJSONString(setLeverage))));
-				logger.info("设置杠杆倍速为" + lever + "成功");
+				logger.info("设置杠杆倍速为{}成功", lever);
 			}
 		}
 		if (tradeApi == null) {
@@ -140,7 +140,7 @@ public class TradeServiceImpl implements TradeService {
 		JSONObject usdtBalance = detailsArray.getJSONObject(0);
 		BigDecimal usdtCashBal = usdtBalance.getBigDecimal("cashBal");
 		if (usdtCashBal.compareTo(new BigDecimal(15)) == -1) {
-			logger.info("账号余额：" + usdtCashBal + ",余额过低小于15;" + "rsi12指标:" + rsi12 + "rsi24指标:" + rsi24);
+			logger.info("账号余额:{},余额过低小于15;rsi12指标:{}rsi24指标:{}", usdtCashBal, rsi12, rsi24);
 			return;
 		}
 
@@ -153,14 +153,13 @@ public class TradeServiceImpl implements TradeService {
 			trend = ";SAR指标:下降趋势" + sar;
 		}
 		if (sar > lowPrice && sar < highPrice) {
-			logger.info("高:" + highPrice + ";低:" + lowPrice + ";SAR:" + sar);
+			logger.info("高:{};低:{};SAR:{}", highPrice, lowPrice, sar);
 		}
-//		logger.info("当前没有持仓;RSI指标：" + indicatorDto.getRsi12() + trend);
 //		int turningPoint = indicatorDto.getMacdTurningPoint();
 //		boolean upFlag = turningPoint == 0;
 //		boolean lowFlag = turningPoint == 1;
-		int highRsi = 82;
-		int lowRsi = 18;
+		int highRsi = 80;
+		int lowRsi = 20;
 //		if (rsi24 > 70) {
 //			highRsi = 85;
 //		}
@@ -176,14 +175,14 @@ public class TradeServiceImpl implements TradeService {
 //			lowRsi6Flag = true;
 //		}
 
-//		boolean firstRsi70 = false;
-//		boolean firstRsi30 = false;
+//		boolean firstRsi80 = false;
+//		boolean firstRsi20 = false;
 //		double[] rsi6Arr = indicatorDto.getRsi6Arr();
-//		if (rsi6Arr[0] < 70 && rsi6Arr[1] < 70 && rsi6Arr[2] < 70 && rsi6Arr[3] < 70 && rsi6Arr[4] > 70) {
-//			firstRsi70 = true;
+//		if (rsi6Arr[0] < 80 && rsi6Arr[1] < 80 && rsi6Arr[2] < 80 && rsi6Arr[3] < 80 && rsi6Arr[4] > 80) {
+//			firstRsi80 = true;
 //		}
-//		if (rsi6Arr[0] > 30 && rsi6Arr[1] > 30 && rsi6Arr[2] > 30 && rsi6Arr[3] > 30 && rsi6Arr[4] < 30) {
-//			firstRsi30 = true;
+//		if (rsi6Arr[0] > 20 && rsi6Arr[1] > 20 && rsi6Arr[2] > 20 && rsi6Arr[3] > 20 && rsi6Arr[4] < 20) {
+//			firstRsi20 = true;
 //		}
 		if (rsi12 < lowRsi || rsi12 > highRsi) {
 			// 获取最大开仓数量
@@ -202,7 +201,7 @@ public class TradeServiceImpl implements TradeService {
 			String direction = "做多";
 			long szNum = maxBuy;
 
-			logger.info("最大购买数量" + maxBuy + "；最大可卖数量：" + maxSell);
+			logger.info("最大购买数量{};最大可卖数量:{}", maxBuy, maxSell);
 			if (rsi12 > highRsi) {
 				side = "sell";
 				szNum = maxSell;
@@ -221,9 +220,8 @@ public class TradeServiceImpl implements TradeService {
 			if (order.getIntValue("sCode") == 0) {
 				isPosition = true;
 			}
-			logger.info("RSI指标：" + rsi12 + "；开" + direction + "仓成功，订单号ordId：" + order.getString("ordId") + "；执行结果sCode："
-					+ order.getString("sCode") + "；执行信息sMsg：" + order.getString("sMsg") + "=======>当前余额：" + usdtCashBal
-					+ trend);
+			logger.info("RSI指标:{}:开{}仓成功，订单号ordId:{};执行结果sCode:{};执行信息sMsg:{}=======>当前余额:{}{}", rsi12, direction,
+					order.getString("ordId"), order.getString("sCode"), order.getString("sMsg"), usdtCashBal, trend);
 
 		}
 	}
@@ -251,17 +249,17 @@ public class TradeServiceImpl implements TradeService {
 		double[] difMacd = calMacd.getDifMacd();
 		double[] deaMacd = calMacd.getDeaMacd();
 		double[] histMacd = calMacd.getHistMacd();
-//		logger.info("difMacd:" + Arrays.toString(difMacd));
-//		logger.info("deaMacd:" + Arrays.toString(deaMacd));
-//		logger.info("histMacd:" + Arrays.toString(histMacd));
-//		logger.info("dHigh:" + Arrays.toString(dHigh));
-//		logger.info("dLow:" + Arrays.toString(dLow));
-//		logger.info("dSar:" + Arrays.toString(dSar));
+//		logger.info("difMacd:{}", Arrays.toString(difMacd));
+//		logger.info("deaMacd:{}", Arrays.toString(deaMacd));
+//		logger.info("histMacd:{}", Arrays.toString(histMacd));
+//		logger.info("dHigh:{}", Arrays.toString(dHigh));
+//		logger.info("dLow:{}", Arrays.toString(dLow));
+//		logger.info("dSar:{}", Arrays.toString(dSar));
 //
-//		logger.info("dClose:" + Arrays.toString(dClose));
-//		logger.info("dRsi6:" + Arrays.toString(dRsi6));
-//		logger.info("dRsi12:" + Arrays.toString(dRsi12));
-//		logger.info("dRsi24:" + Arrays.toString(dRsi24));
+//		logger.info("dClose:{}", Arrays.toString(dClose));
+//		logger.info("dRsi6:{}", Arrays.toString(dRsi6));
+//		logger.info("dRsi12:{}", Arrays.toString(dRsi12));
+//		logger.info("dRsi24:{}", Arrays.toString(dRsi24));
 
 		IndicatorDto indicatorDto = new IndicatorDto();
 		indicatorDto.setSar(dSar[dSar.length - 1]);
@@ -273,8 +271,8 @@ public class TradeServiceImpl implements TradeService {
 		indicatorDto.setStick(histMacd[histMacd.length - 1]);
 		indicatorDto.setSarTurningPoint(-1);
 		indicatorDto.setMacdTurningPoint(-1);
-//		indicatorDto.setRsi6Arr(new double[] { dRsi6[dRsi6.length - 5], dRsi6[dRsi6.length - 4],
-//				dRsi6[dRsi6.length - 3], dRsi6[dRsi6.length - 2], dRsi6[dRsi6.length - 1] });
+		indicatorDto.setRsi6Arr(new double[] { dRsi6[dRsi6.length - 5], dRsi6[dRsi6.length - 4],
+				dRsi6[dRsi6.length - 3], dRsi6[dRsi6.length - 2], dRsi6[dRsi6.length - 1] });
 //		indicatorDto.setMacdTwoTurningPoint(-1);
 
 		// 判断当前是否是拐点
@@ -282,25 +280,21 @@ public class TradeServiceImpl implements TradeService {
 				&& histMacd[histMacd.length - 3] < 0 && histMacd[histMacd.length - 2] < 0
 				&& histMacd[histMacd.length - 1] > 0) {// 由下降转上升
 			indicatorDto.setMacdTurningPoint(0);
-//			logger.info("macd拐点:下降--->上升;rsi6指标:" + indicatorDto.getRsi6() + ";rsi12指标:" + indicatorDto.getRsi12()
-//					+ ";rsi24指标:" + indicatorDto.getRsi24());
+//			logger.info("macd拐点:下降--->上升");
 		}
 		if (histMacd[histMacd.length - 6] > 0 && histMacd[histMacd.length - 5] > 0 && histMacd[histMacd.length - 4] > 0
 				&& histMacd[histMacd.length - 3] > 0 && histMacd[histMacd.length - 2] > 0
 				&& histMacd[histMacd.length - 1] < 0) {// 由上升转下降
 			indicatorDto.setMacdTurningPoint(1);
-//			logger.info("macd拐点:上升--->下降;rsi6指标:" + indicatorDto.getRsi6() + ";rsi12指标:" + indicatorDto.getRsi12()
-//					+ ";rsi24指标:" + indicatorDto.getRsi24());
+//			logger.info("macd拐点:上升--->下降");
 		}
 		if (histMacd[histMacd.length - 2] < 0 && histMacd[histMacd.length - 1] > 0) {// 由下降转上升
 			indicatorDto.setSingleMacdTurningPoint(0);
-//			logger.info("macd拐点:下降--->上升;rsi6指标:" + indicatorDto.getRsi6() + ";rsi12指标:" + indicatorDto.getRsi12()
-//					+ ";rsi24指标:" + indicatorDto.getRsi24());
+//			logger.info("macd拐点:下降--->上升");
 		}
 		if (histMacd[histMacd.length - 2] > 0 && histMacd[histMacd.length - 1] < 0) {// 由上升转下降
 			indicatorDto.setSingleMacdTurningPoint(1);
-//			logger.info("macd拐点:上升--->下降;rsi6指标:" + indicatorDto.getRsi6() + ";rsi12指标:" + indicatorDto.getRsi12()
-//					+ ";rsi24指标:" + indicatorDto.getRsi24());
+//			logger.info("macd拐点:上升--->下降");
 		}
 //		if (histMacd[histMacd.length - 3] < 0 && histMacd[histMacd.length - 2] > 0
 //				&& histMacd[histMacd.length - 1] > 0) {// 由下降转上升
@@ -321,13 +315,11 @@ public class TradeServiceImpl implements TradeService {
 		double preSar = dSar[dSar.length - 2];
 		if (preHigh < preSar && curLow > curSar) {// 由下降转上升
 			indicatorDto.setSarTurningPoint(0);
-//			logger.info("sar拐点:下降--->上升;rsi6指标:" + indicatorDto.getRsi6() + ";rsi12指标:" + indicatorDto.getRsi12()
-//					+ ";rsi24指标:" + indicatorDto.getRsi24());
+//			logger.info("sar拐点:下降--->上升");
 		}
 		if (preLow > preSar && curHigh < curSar) {// 由上升转下降
 			indicatorDto.setSarTurningPoint(1);
-//			logger.info("sar拐点:上升--->下降;rsi6指标:" + indicatorDto.getRsi6() + ";rsi12指标:" + indicatorDto.getRsi12()
-//					+ ";rsi24指标:" + indicatorDto.getRsi24());
+//			logger.info("sar拐点:上升--->下降");
 		}
 		return indicatorDto;
 	}
@@ -380,11 +372,6 @@ public class TradeServiceImpl implements TradeService {
 		if (highPrice <= sar) {// 下降趋势
 			trend = ";SAR指标:下降趋势" + sar;
 		}
-//		if (pos > 0) {
-//			logger.info("当前持做多仓；RSI指标：" + rsi12 + ";当前收益率：" + uplRatio + trend);
-//		} else {
-//			logger.info("当前持做空仓；RSI指标：" + rsi12 + ";当前收益率：" + uplRatio + trend);
-//		}
 
 //		int turningPoint = indicatorDto.getSingleMacdTurningPoint();
 //		boolean macdUpFlag = turningPoint == 0;
@@ -395,19 +382,18 @@ public class TradeServiceImpl implements TradeService {
 //		long systmTime = sytmTimeData.getJSONObject(0).getLongValue("ts");
 //		boolean timeFlag = (systmTime - cTime) > intBar * 5 * 60 * 1000;// 平仓前至少需要持仓5个周期
 
-		if (uplRatio.compareTo(new BigDecimal("0.10")) > -1) {
+		if (uplRatio.compareTo(new BigDecimal("0.06")) > -1) {
 			if (uplRatio.compareTo(highestUplRatio) == 1) {
 				highestUplRatio = uplRatio;
-				logger.info("highestUplRatio更新，当前为：" + highestUplRatio + ";rsi6指数为：" + rsi6 + ";rsi12指数为：" + rsi12
-						+ ";rsi24指数为：" + rsi24 + trend);
+				logger.info("highestUplRatio更新，当前为:{};rsi6指数为:{};rsi12指数为:{};rsi24指数为:{}{}", highestUplRatio, rsi6,
+						rsi12, rsi24, trend);
 			}
 		}
-		if (highestUplRatio.compareTo(new BigDecimal("0.10")) > -1) {
+		if (highestUplRatio.compareTo(new BigDecimal("0.06")) > -1) {
 			if (uplRatio.compareTo(highestUplRatio.subtract(new BigDecimal("0.01"))) < 1) {
-				logger.info("highestUplRatio当前为：" + highestUplRatio);
+				logger.info("highestUplRatio当前为:{}", highestUplRatio);
 				sell();
-				logger.info("常规平仓收益率为：" + uplRatio + ";rsi6指数为：" + rsi6 + ";rsi12指数为：" + rsi12 + ";rsi24指数为：" + rsi24
-						+ trend);
+				logger.info("常规平仓收益率为:{};rsi6指数为:{};rsi12指数为:{};rsi24指数为:{}{}", uplRatio, rsi6, rsi12, rsi24, trend);
 				return;
 			}
 		}
@@ -429,23 +415,19 @@ public class TradeServiceImpl implements TradeService {
 //			lowRsi6Flag = true;
 //		}
 //		if (pos > 0 && (lowRsi6Flag || rsi12 > highRsi)) {
-//			logger.info(
-//					"做多平仓收益率为：" + uplRatio + ";rsi6指数为：" + rsi6 + ";rsi12指数为：" + rsi12 + ";rsi24指数为：" + rsi24 + trend);
+//			logger.info("做多平仓收益率为:{}" ,uplRatio);
 //			sell();
 //		}
 //		if (pos < 0 && (upRsi6Flag || rsi12 < lowRsi)) {
-//			logger.info(
-//					"做空平仓收益率为：" + uplRatio + ";rsi6指数为：" + rsi6 + ";rsi12指数为：" + rsi12 + ";rsi24指数为：" + rsi24 + trend);
+//			logger.info("做空平仓收益率为:", uplRatio);
 //			sell();
 //		}
 //		if (pos > 0 && timeFlag && macdLowFlag) {
-//			logger.info(
-//					"做多平仓收益率为：" + uplRatio + ";rsi6指数为：" + rsi6 + ";rsi12指数为：" + rsi12 + ";rsi24指数为：" + rsi24 + trend);
+//			logger.info("做多平仓收益率为:{}" ,uplRatio);
 //			sell();
 //		}
 //		if (pos < 0 && timeFlag && macdUpFlag) {
-//			logger.info(
-//					"做空平仓收益率为：" + uplRatio + ";rsi6指数为：" + rsi6 + ";rsi12指数为：" + rsi12 + ";rsi24指数为：" + rsi24 + trend);
+//			logger.info("做空平仓收益率为:", uplRatio);
 //			sell();
 //		}
 	}
@@ -465,8 +447,8 @@ public class TradeServiceImpl implements TradeService {
 		if (closePosition.getIntValue("code") == 0) {
 			isPosition = false;
 		}
-		logger.info("平仓操作code：" + closePosition.getString("code") + ";msg:" + closePosition.getString("msg")
-				+ ";=========>当前余额：" + usdtCashBal);
+		logger.info("平仓操作code:{};msg:{};=========>当前余额:{}", closePosition.getString("code"),
+				closePosition.getString("msg"), usdtCashBal);
 	}
 
 	@Override
@@ -484,7 +466,7 @@ public class TradeServiceImpl implements TradeService {
 		JSONObject uplRatioObject = jsonArray.getJSONObject(0);
 		BigDecimal uplRatio = uplRatioObject.getBigDecimal("uplRatio");
 		if (uplRatio.compareTo(new BigDecimal("-0.25")) == -1) {// 达到强制止损线
-			logger.info("当前收益率：" + uplRatio);
+			logger.info("当前收益率{}", uplRatio);
 			logger.info("达到强制止损线-25%");
 			sell();
 		}

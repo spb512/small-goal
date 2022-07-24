@@ -94,7 +94,10 @@
 			<artifactId>junit-jupiter-api</artifactId>
 			<scope>test</scope>
 		</dependency>
-
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+		</dependency>
 	</dependencies>
 
 	<profiles>
@@ -112,9 +115,9 @@
 		</profile>
 		<!--这是生产环境 -->
 		<profile>
-			<id>prod</id>
+			<id>pro</id>
 			<properties>
-				<activatedEnv>prod</activatedEnv>
+				<activatedEnv>pro</activatedEnv>
 			</properties>
 		</profile>
 	</profiles>

@@ -9,19 +9,19 @@ import org.springframework.test.context.web.WebAppConfiguration;
 
 import com.spb512.small.goal.service.TradeService;
 
-/** 
-* @author spb512
-* @date 2022年6月21日 下午7:59:28 
-* 
-*/
+/**
+ * @author spb512
+ * @date 2022年6月21日 下午7:59:28
+ * 
+ */
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @WebAppConfiguration
 public class TradeTest {
-	
+
 	@Autowired
 	private TradeService tradeService;
-	
+
 	@Test
 	public void testOpenPosition() {
 		tradeService.openPosition();
