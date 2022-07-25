@@ -14,19 +14,19 @@ import com.okx.open.api.enums.I18nEnum;
  */
 @Component
 public class PrivateClient {
-	@Value("${okx.end.point}")
+	@Value("${okx.end.point:https://www.okx.com/}")
 	private String endPoint;
-	@Value("${okx.api.key}")
+	@Value("${okx.api.key:}")
 	private String apiKey;
-	@Value("${okx.secre.key}")
+	@Value("${okx.secre.key:}")
 	private String secreKey;
-	@Value("${okx.passphrase}")
+	@Value("${okx.passphrase:}")
 	private String passphrase;
-	@Value("${okx.simulated}")
+	@Value("${okx.simulated:0}")
 	private int simulated;
-	@Value("${okx.proxy.server.address}")
+	@Value("${okx.proxy.server.address:}")
 	private String proxyServerAddress;
-	@Value("${okx.proxy.server.port}")
+	@Value("${okx.proxy.server.port:0}")
 	private int proxyServerPort;
 	private ApiClient client;
 

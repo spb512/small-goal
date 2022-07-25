@@ -14,13 +14,13 @@ import com.okx.open.api.enums.I18nEnum;
  */
 @Component
 public class PublicClient {
-	@Value("${okx.end.point}")
+	@Value("${okx.end.point:https://www.okx.com/}")
 	private String endPoint;
-	@Value("${okx.simulated}")
+	@Value("${okx.simulated:0}")
 	private int simulated;
-	@Value("${okx.proxy.server.address}")
+	@Value("${okx.proxy.server.address:}")
 	private String proxyServerAddress;
-	@Value("${okx.proxy.server.port}")
+	@Value("${okx.proxy.server.port:0}")
 	private int proxyServerPort;
 	private ApiClient client;
 
