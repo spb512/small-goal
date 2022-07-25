@@ -12,7 +12,7 @@ import com.spb512.small.goal.utils.talib.FinStratModel;
  * @date 2022年6月29日
  */
 @SpringBootTest
-public class FinStratModelTest {
+public class FinStratModelTests {
 	@Test
 	void testTalibSar() {
 		double[] dHigh = new double[] { 1153.01, 1154.99, 1155.35, 1154.23, 1154.12, 1153.58, 1152.22, 1149.89, 1151.65,

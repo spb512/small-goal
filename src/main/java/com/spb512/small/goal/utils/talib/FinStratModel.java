@@ -13,7 +13,9 @@ import com.tictactec.ta.lib.RetCode;
  */
 @Component
 public class FinStratModel {
-	// Talib核心
+	/**
+	 * Talib核心
+	 */
 	private Core finLib = new Core();
 
 	/**
@@ -21,11 +23,11 @@ public class FinStratModel {
 	 * 
 	 * @param inHigh   最高价
 	 * @param inLow    最低价
-	 * @param optAF    加速因子AF（因子 0.02）
-	 * @param optMaxAF 加速因子AF最大值（因子 0.2）
+	 * @param optAf    加速因子AF（因子 0.02）
+	 * @param optMaxAf 加速因子AF最大值（因子 0.2）
 	 * @return SAR计算结果数据
 	 */
-	public FinStratEntity calSar(double inHigh[], double inLow[], double optAF, double optMaxAF) {
+	public FinStratEntity calSar(double inHigh[], double inLow[], double optAf, double optMaxAf) {
 
 		// 指标计算结果
 		FinStratEntity fiResult = new FinStratEntity();
@@ -34,7 +36,7 @@ public class FinStratModel {
 		int endIdx = inHigh.length - 1;
 		double[] sarReal = new double[inHigh.length - 1];
 
-		RetCode retCode = this.finLib.sar(startIdx, endIdx, inHigh, inLow, optAF, optMaxAF, new MInteger(),
+		RetCode retCode = this.finLib.sar(startIdx, endIdx, inHigh, inLow, optAf, optMaxAf, new MInteger(),
 				new MInteger(), sarReal);
 		if (retCode == RetCode.Success) {
 			fiResult.setRetCode(0);

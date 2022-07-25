@@ -1,8 +1,9 @@
 package com.spb512.small.goal.trade;
 
+import javax.annotation.Resource;
+
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -17,9 +18,9 @@ import com.spb512.small.goal.service.TradeService;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @WebAppConfiguration
-public class TradeTest {
+public class TradeTests {
 
-	@Autowired
+	@Resource
 	private TradeService tradeService;
 
 	@Test

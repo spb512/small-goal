@@ -14,6 +14,7 @@ public interface StatusService {
 	 * 获取系统状态
 	 * 
 	 * @param state
+	 * @return
 	 */
 	List<StatusDto> getStatus(String state);
 

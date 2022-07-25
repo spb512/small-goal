@@ -25,8 +25,13 @@
     "description": "A description for 'okx.simulated'"
   },
   {
-    "name": "okx.proxyed",
+    "name": "okx.proxy.server.address",
     "type": "java.lang.String",
-    "description": "A description for 'okx.proxyed'"
+    "description": "A description for 'okx.proxy.server.address'"
+  },
+  {
+    "name": "okx.proxy.server.port",
+    "type": "java.lang.String",
+    "description": "A description for 'okx.proxy.server.port'"
   }
 ]}

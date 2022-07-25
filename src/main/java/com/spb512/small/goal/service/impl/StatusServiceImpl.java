@@ -2,9 +2,10 @@ package com.spb512.small.goal.service.impl;
 
 import java.util.List;
 
+import javax.annotation.Resource;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.alibaba.fastjson.JSONArray;
@@ -23,7 +24,7 @@ import com.spb512.small.goal.utils.PublicClient;
 public class StatusServiceImpl implements StatusService {
 	Logger logger = LoggerFactory.getLogger(getClass());
 
-	@Autowired
+	@Resource
 	private PublicClient publicClient;
 	private StatusDataApi statusDataApi;
 
