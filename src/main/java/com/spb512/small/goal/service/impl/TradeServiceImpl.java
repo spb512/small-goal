@@ -103,6 +103,14 @@ public class TradeServiceImpl implements TradeService {
 	 * 最高盈利率
 	 */
 	private BigDecimal highestUplRatio = BigDecimal.ZERO;
+	/**
+	 * 最高做空点
+	 */
+	private double highestHighRsi = 0;
+	/**
+	 * 最低做空点
+	 */
+	private double lowestLowRsi = 100;
 	private double[] dHigh = new double[Integer.parseInt(limit)];
 	private double[] dLow = new double[Integer.parseInt(limit)];
 	private double[] dClose = new double[Integer.parseInt(limit)];
@@ -117,23 +125,35 @@ public class TradeServiceImpl implements TradeService {
 	/**
 	 * 收益率激活
 	 */
-	private double activateYield = 0.07;
+	private double activateRatio = 0.03;
 	/**
 	 * 回调收益率
 	 */
-	private double pullbackYield = 0.01;
+	private double pullbackRatio = 0.01;
 	/**
 	 * 强制止损线
 	 */
-	private double stopLossLine = -0.13;
+	private double stopLossLine = -0.20;
 	/**
-	 * rsi12做空点
+	 * rsi12做空激活点
 	 */
-	private int highRsi = 81;
+	private int activateHighRsi12 = 80;
 	/**
-	 * rsi12做多点
+	 * rsi12做多激活点
 	 */
-	private int lowRsi = 19;
+	private int activateLowRsi12 = 20;
+	/**
+	 * 回调开仓点
+	 */
+	private double pullbackRsi = 1;
+	/**
+	 * 做多
+	 */
+	private boolean doBuy = false;
+	/**
+	 * 做空
+	 */
+	private boolean doSell = false;
 
 	@PostConstruct
 	public void init() {
@@ -191,7 +211,32 @@ public class TradeServiceImpl implements TradeService {
 			logger.info("账号余额:{},余额过低小于{};rsi12指标:{}rsi24指标:{}", usdtCashBal, minStartup, rsi12, rsi24);
 			return;
 		}
-		if (rsi12 < lowRsi || rsi12 > highRsi) {
+		if (rsi12 > activateHighRsi12) {
+			if (rsi12 > highestHighRsi) {
+				highestHighRsi = rsi12;
+				logger.info("highestHighRsi更新，当前为:{}", rsi12);
+			}
+		}
+		if (highestHighRsi > activateHighRsi12) {
+			if (highestHighRsi - rsi12 > pullbackRsi) {
+				doSell = true;
+				logger.info("highestHighRsi当前为:{}", highestHighRsi);
+			}
+		}
+
+		if (rsi12 < activateLowRsi12) {
+			if (rsi12 < lowestLowRsi) {
+				lowestLowRsi = rsi12;
+				logger.info("lowestLowRsi更新，当前为:{}", rsi12);
+			}
+		}
+		if (lowestLowRsi < activateLowRsi12) {
+			if (rsi12 - lowestLowRsi > pullbackRsi) {
+				doBuy = true;
+				logger.info("lowestLowRsi当前为:{}", lowestLowRsi);
+			}
+		}
+		if (doBuy || doSell) {
 			// 获取最大开仓数量
 			JSONObject maxImun = pvClient
 					.executeSync(accountApi.getMaximumTradableSizeForInstrument(instId, mode, null, currentPrice));
@@ -207,7 +252,7 @@ public class TradeServiceImpl implements TradeService {
 			String direction = "做多";
 			long szNum = maxBuy;
 			logger.info("最大购买数量{};最大可卖数量:{}", maxBuy, maxSell);
-			if (rsi12 > highRsi) {
+			if (doSell) {
 				side = "sell";
 				szNum = maxSell;
 				direction = "做空";
@@ -225,6 +270,10 @@ public class TradeServiceImpl implements TradeService {
 			JSONObject order = orderArray.getJSONObject(0);
 			if (order.getIntValue(sCode) == 0) {
 				isPosition = true;
+				lowestLowRsi = 100;
+				highestHighRsi = 0;
+				doBuy = false;
+				doSell = false;
 			}
 			logger.info("RSI指标:{}:开{}仓成功，订单号ordId:{};执行结果sCode:{};执行信息sMsg:{}=======>当前余额:{}", rsi12, direction,
 					order.getString("ordId"), order.getString(sCode), order.getString("sMsg"), usdtCashBal);
@@ -305,19 +354,18 @@ public class TradeServiceImpl implements TradeService {
 		double rsi6 = indicatorDto.getRsi6();
 		double rsi12 = indicatorDto.getRsi12();
 		double rsi24 = indicatorDto.getRsi24();
-		if (uplRatio.compareTo(new BigDecimal(activateYield)) > -1) {
+		if (uplRatio.compareTo(new BigDecimal(activateRatio)) > -1) {
 			if (uplRatio.compareTo(highestUplRatio) == 1) {
 				highestUplRatio = uplRatio;
 				logger.info("highestUplRatio更新，当前为:{};rsi6指数为:{};rsi12指数为:{};rsi24指数为:{}", highestUplRatio, rsi6, rsi12,
 						rsi24);
 			}
 		}
-		if (highestUplRatio.compareTo(new BigDecimal(activateYield)) > -1) {
-			if (uplRatio.compareTo(highestUplRatio.subtract(new BigDecimal(pullbackYield))) < 1) {
+		if (highestUplRatio.compareTo(new BigDecimal(activateRatio)) > -1) {
+			if (uplRatio.compareTo(highestUplRatio.subtract(new BigDecimal(pullbackRatio))) < 1) {
 				logger.info("highestUplRatio当前为:{}", highestUplRatio);
 				sell();
 				logger.info("平仓收益率为:{};rsi6指数为:{};rsi12指数为:{};rsi24指数为:{}", uplRatio, rsi6, rsi12, rsi24);
-				return;
 			}
 		}
 	}
