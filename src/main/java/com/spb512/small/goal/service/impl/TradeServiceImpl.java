@@ -133,15 +133,15 @@ public class TradeServiceImpl implements TradeService {
 	/**
 	 * 强制止损线
 	 */
-	private double stopLossLine = -0.20;
+	private double stopLossLine = -0.30;
 	/**
 	 * rsi12做空激活点
 	 */
-	private int activateHighRsi12 = 80;
+	private int activateHighRsi12 = 81;
 	/**
 	 * rsi12做多激活点
 	 */
-	private int activateLowRsi12 = 20;
+	private int activateLowRsi12 = 19;
 	/**
 	 * 回调开仓点
 	 */
@@ -214,26 +214,24 @@ public class TradeServiceImpl implements TradeService {
 		if (rsi12 > activateHighRsi12) {
 			if (rsi12 > highestHighRsi) {
 				highestHighRsi = rsi12;
-				logger.info("highestHighRsi更新，当前为:{}", rsi12);
+				logger.info("highestHighRsi更新，当前为:{}", highestHighRsi);
 			}
 		}
 		if (highestHighRsi > activateHighRsi12) {
 			if (highestHighRsi - rsi12 > pullbackRsi) {
 				doSell = true;
-				logger.info("highestHighRsi当前为:{}", highestHighRsi);
 			}
 		}
 
 		if (rsi12 < activateLowRsi12) {
 			if (rsi12 < lowestLowRsi) {
 				lowestLowRsi = rsi12;
-				logger.info("lowestLowRsi更新，当前为:{}", rsi12);
+				logger.info("lowestLowRsi更新，当前为:{}", lowestLowRsi);
 			}
 		}
 		if (lowestLowRsi < activateLowRsi12) {
 			if (rsi12 - lowestLowRsi > pullbackRsi) {
 				doBuy = true;
-				logger.info("lowestLowRsi当前为:{}", lowestLowRsi);
 			}
 		}
 		if (doBuy || doSell) {
@@ -363,7 +361,6 @@ public class TradeServiceImpl implements TradeService {
 		}
 		if (highestUplRatio.compareTo(new BigDecimal(activateRatio)) > -1) {
 			if (uplRatio.compareTo(highestUplRatio.subtract(new BigDecimal(pullbackRatio))) < 1) {
-				logger.info("highestUplRatio当前为:{}", highestUplRatio);
 				sell();
 				logger.info("平仓收益率为:{};rsi6指数为:{};rsi12指数为:{};rsi24指数为:{}", uplRatio, rsi6, rsi12, rsi24);
 			}
