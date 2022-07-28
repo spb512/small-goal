@@ -122,6 +122,13 @@
 				<activatedEnv>pro</activatedEnv>
 			</properties>
 		</profile>
+		<!--这是测试环境 -->
+		<profile>
+			<id>test</id>
+			<properties>
+				<activatedEnv>test</activatedEnv>
+			</properties>
+		</profile>
 	</profiles>
 
 	<build>
