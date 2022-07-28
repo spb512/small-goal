@@ -8,8 +8,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
 import com.okx.open.api.service.status.impl.StatusDataApi;
 import com.spb512.small.goal.dto.StatusDto;
 import com.spb512.small.goal.service.StatusService;
@@ -33,7 +34,7 @@ public class StatusServiceImpl implements StatusService {
 		statusDataApi = publicClient.getClient().createService(StatusDataApi.class);
 		JSONObject executeSync = publicClient.getClient().executeSync(this.statusDataApi.getStatus(state));
 		JSONArray jsonArray = executeSync.getJSONArray("data");
-		List<StatusDto> list = JSONArray.parseArray(jsonArray.toString(), StatusDto.class);
+		List<StatusDto> list = JSON.parseArray(jsonArray.toString(), StatusDto.class);
 		for (StatusDto statusDto : list) {
 			logger.info(statusDto.toString());
 		}
