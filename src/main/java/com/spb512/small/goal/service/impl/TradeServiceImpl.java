@@ -199,7 +199,6 @@ public class TradeServiceImpl implements TradeService {
 		IndicatorDto indicatorDto = getIndicators(candlesticksArray);
 		double rsi12 = indicatorDto.getRsi12();
 		double rsi24 = indicatorDto.getRsi24();
-		String currentPrice = candlesticksArray.getJSONArray(0).getString(4);
 		// 查询账户余额
 		JSONObject balanceObject = pvClient.executeSync(accountApi.getBalance(ccy));
 		JSONArray balanceArray = balanceObject.getJSONArray(data);
@@ -237,18 +236,19 @@ public class TradeServiceImpl implements TradeService {
 		if (doBuy || doSell) {
 			// 获取最大开仓数量
 			JSONObject maxImun = pvClient
-					.executeSync(accountApi.getMaximumTradableSizeForInstrument(instId, mode, null, currentPrice));
+					.executeSync(accountApi.getMaximumTradableSizeForInstrument(instId, mode, null, null));
 			JSONArray maxInumArray = maxImun.getJSONArray(data);
 			JSONObject maxInumObject = maxInumArray.getJSONObject(0);
-			long maxBuy = maxInumObject.getBigDecimal("maxBuy").multiply(new BigDecimal("0.90")).longValue();
-			long maxSell = maxInumObject.getBigDecimal("maxSell").multiply(new BigDecimal("0.90")).longValue();
-			if (maxBuy > maxBuyOrSell || maxSell > maxBuyOrSell) {
-				maxBuy = 4500;
-				maxSell = 4500;
+			String maxBuy = maxInumObject.getString("maxBuy");
+			String maxSell = maxInumObject.getString("maxSell");
+
+			if (Long.parseLong(maxBuy) > maxBuyOrSell || Long.parseLong(maxSell) > maxBuyOrSell) {
+				maxBuy = "4500";
+				maxSell = "4500";
 			}
 			String side = "buy";
 			String direction = "做多";
-			long szNum = maxBuy;
+			String szNum = maxBuy;
 			logger.info("最大购买数量{};最大可卖数量:{}", maxBuy, maxSell);
 			if (doSell) {
 				side = "sell";
@@ -261,7 +261,7 @@ public class TradeServiceImpl implements TradeService {
 			placeOrder.setSide(side);
 			placeOrder.setOrdType("market");
 			// 委托数量
-			placeOrder.setSz(szNum + "");
+			placeOrder.setSz(szNum);
 			JSONObject orderSync = pvClient
 					.executeSync(this.tradeApi.placeOrder(JSONObject.parseObject(JSON.toJSONString(placeOrder))));
 			JSONArray orderArray = orderSync.getJSONArray(data);
