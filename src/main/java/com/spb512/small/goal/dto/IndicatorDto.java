@@ -10,10 +10,12 @@ public class IndicatorDto {
 	private double sar;
 	private double rsi6;
 	private double rsi12;
+	private double[] rsi12Arr;
 	private double rsi24;
 	private double diff;
 	private double dea;
 	private double stick;
+	private double cci;
 	private int sarTurningPoint;
 	private int macdTurningPoint;
 	private int singleMacdTurningPoint;
@@ -107,12 +109,20 @@ public class IndicatorDto {
 		this.rsi6Arr = rsi6Arr;
 	}
 
-//	public int getMacdTwoTurningPoint() {
-//		return macdTwoTurningPoint;
-//	}
-//
-//	public void setMacdTwoTurningPoint(int macdTwoTurningPoint) {
-//		this.macdTwoTurningPoint = macdTwoTurningPoint;
-//	}
+	public double getCci() {
+		return cci;
+	}
+
+	public void setCci(double cci) {
+		this.cci = cci;
+	}
+
+	public double[] getRsi12Arr() {
+		return rsi12Arr;
+	}
+
+	public void setRsi12Arr(double[] rsi12Arr) {
+		this.rsi12Arr = rsi12Arr;
+	}
 
 }

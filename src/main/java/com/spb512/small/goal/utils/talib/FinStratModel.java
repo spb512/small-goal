@@ -99,4 +99,32 @@ public class FinStratModel {
 		}
 		return fiResult;
 	}
+
+	/**
+	 * 计算顺势指标(CCI)
+	 * 
+	 * @param inHigh       最高价
+	 * @param inLow        最低价
+	 * @param inClose      收盘价
+	 * @param inTimePeriod 时间周期
+	 * @return
+	 */
+	public FinStratEntity calCci(double inHigh[], double inLow[], double inClose[], int inTimePeriod) {
+		// 指标计算结果
+		FinStratEntity fiResult = new FinStratEntity();
+
+		// 基础计算库
+		int startIdx = 0;
+		int endIdx = inClose.length - 1;
+		double[] cciReal = new double[inClose.length - 13];
+
+		RetCode retCode = this.finLib.cci(startIdx, endIdx, inHigh, inLow, inClose, inTimePeriod, new MInteger(),
+				new MInteger(), cciReal);
+
+		if (retCode == RetCode.Success) {
+			fiResult.setRetCode(0);
+			fiResult.setCciReal(cciReal);
+		}
+		return fiResult;
+	}
 }

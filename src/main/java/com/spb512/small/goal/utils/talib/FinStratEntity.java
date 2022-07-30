@@ -11,6 +11,7 @@ public class FinStratEntity {
 	private double[] difMacd;
 	private double[] deaMacd;
 	private double[] histMacd;
+	private double[] cciReal;
 
 	public int getRetCode() {
 		return retCode;
@@ -50,6 +51,14 @@ public class FinStratEntity {
 
 	public void setHistMacd(double[] histMacd) {
 		this.histMacd = histMacd;
+	}
+
+	public double[] getCciReal() {
+		return cciReal;
+	}
+
+	public void setCciReal(double[] cciReal) {
+		this.cciReal = cciReal;
 	}
 
 }

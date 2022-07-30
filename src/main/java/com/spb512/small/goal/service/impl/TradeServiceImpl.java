@@ -103,14 +103,14 @@ public class TradeServiceImpl implements TradeService {
 	 * 最高盈利率
 	 */
 	private BigDecimal highestUplRatio = BigDecimal.ZERO;
-	/**
-	 * 最高做空点
-	 */
-	private double highestHighRsi = 0;
-	/**
-	 * 最低做空点
-	 */
-	private double lowestLowRsi = 100;
+//	/**
+//	 * 最高做空点
+//	 */
+//	private double highestHighRsi = 0;
+//	/**
+//	 * 最低做空点
+//	 */
+//	private double lowestLowRsi = 100;
 	private double[] dHigh = new double[Integer.parseInt(limit)];
 	private double[] dLow = new double[Integer.parseInt(limit)];
 	private double[] dClose = new double[Integer.parseInt(limit)];
@@ -125,7 +125,7 @@ public class TradeServiceImpl implements TradeService {
 	/**
 	 * 收益率激活
 	 */
-	private double activateRatio = 0.02;
+	private double activateRatio = 0.03;
 	/**
 	 * 回调收益率
 	 */
@@ -133,27 +133,27 @@ public class TradeServiceImpl implements TradeService {
 	/**
 	 * 强制止损线
 	 */
-	private double stopLossLine = -0.20;
+	private double stopLossLine = -0.10;
 	/**
 	 * rsi12做空激活点
 	 */
-	private int activateHighRsi12 = 81;
+	private int activateHighRsi12 = 65;
 	/**
 	 * rsi12做多激活点
 	 */
-	private int activateLowRsi12 = 19;
-	/**
-	 * 回调开仓点
-	 */
-	private double pullbackRsi = 1;
-	/**
-	 * 做多
-	 */
-	private boolean doBuy = false;
-	/**
-	 * 做空
-	 */
-	private boolean doSell = false;
+	private int activateLowRsi12 = 35;
+//	/**
+//	 * 回调开仓点
+//	 */
+//	private double pullbackRsi = 1;
+//	/**
+//	 * 做多
+//	 */
+//	private boolean doBuy = false;
+//	/**
+//	 * 做空
+//	 */
+//	private boolean doSell = false;
 
 	@PostConstruct
 	public void init() {
@@ -199,6 +199,7 @@ public class TradeServiceImpl implements TradeService {
 		IndicatorDto indicatorDto = getIndicators(candlesticksArray);
 		double rsi12 = indicatorDto.getRsi12();
 		double rsi24 = indicatorDto.getRsi24();
+		double[] rsi12Arr = indicatorDto.getRsi12Arr();
 		// 查询账户余额
 		JSONObject balanceObject = pvClient.executeSync(accountApi.getBalance(ccy));
 		JSONArray balanceArray = balanceObject.getJSONArray(data);
@@ -210,30 +211,36 @@ public class TradeServiceImpl implements TradeService {
 			logger.info("账号余额:{},余额过低小于{};rsi12指标:{}rsi24指标:{}", usdtCashBal, minStartup, rsi12, rsi24);
 			return;
 		}
-		if (rsi12 > activateHighRsi12) {
-			if (rsi12 > highestHighRsi) {
-				highestHighRsi = rsi12;
-				logger.info("highestHighRsi更新，当前为:{}", highestHighRsi);
-			}
-		}
-		if (highestHighRsi > activateHighRsi12) {
-			if (highestHighRsi - rsi12 > pullbackRsi) {
-				doSell = true;
-			}
-		}
-
-		if (rsi12 < activateLowRsi12) {
-			if (rsi12 < lowestLowRsi) {
-				lowestLowRsi = rsi12;
-				logger.info("lowestLowRsi更新，当前为:{}", lowestLowRsi);
-			}
-		}
-		if (lowestLowRsi < activateLowRsi12) {
-			if (rsi12 - lowestLowRsi > pullbackRsi) {
-				doBuy = true;
-			}
-		}
-		if (doBuy || doSell) {
+//		if (rsi12 > activateHighRsi12) {
+//			if (rsi12 > highestHighRsi) {
+//				highestHighRsi = rsi12;
+//				logger.info("highestHighRsi更新，当前为:{}", highestHighRsi);
+//			}
+//		}
+//		if (highestHighRsi > activateHighRsi12) {
+//			if (highestHighRsi - rsi12 > pullbackRsi) {
+//				doSell = true;
+//			}
+//		}
+//
+//		if (rsi12 < activateLowRsi12) {
+//			if (rsi12 < lowestLowRsi) {
+//				lowestLowRsi = rsi12;
+//				logger.info("lowestLowRsi更新，当前为:{}", lowestLowRsi);
+//			}
+//		}
+//		if (lowestLowRsi < activateLowRsi12) {
+//			if (rsi12 - lowestLowRsi > pullbackRsi) {
+//				doBuy = true;
+//			}
+//		}
+		boolean buyFlag = rsi12Arr[0] < activateHighRsi12 && rsi12Arr[1] < activateHighRsi12
+				&& rsi12Arr[2] < activateHighRsi12 && rsi12Arr[3] < activateHighRsi12 && rsi12Arr[4] < activateHighRsi12
+				&& rsi12Arr[5] > activateHighRsi12;
+		boolean sellFlag = rsi12Arr[0] > activateLowRsi12 && rsi12Arr[1] > activateLowRsi12
+				&& rsi12Arr[2] > activateLowRsi12 && rsi12Arr[3] > activateLowRsi12 && rsi12Arr[4] > activateLowRsi12
+				&& rsi12Arr[5] < activateLowRsi12;
+		if (buyFlag || sellFlag) {
 			// 获取最大开仓数量
 			JSONObject maxImun = pvClient
 					.executeSync(accountApi.getMaximumTradableSizeForInstrument(instId, mode, null, null));
@@ -250,7 +257,7 @@ public class TradeServiceImpl implements TradeService {
 			String direction = "做多";
 			String szNum = maxBuy;
 			logger.info("最大购买数量{};最大可卖数量:{}", maxBuy, maxSell);
-			if (doSell) {
+			if (sellFlag) {
 				side = "sell";
 				szNum = maxSell;
 				direction = "做空";
@@ -268,10 +275,10 @@ public class TradeServiceImpl implements TradeService {
 			JSONObject order = orderArray.getJSONObject(0);
 			if (order.getIntValue(sCode) == 0) {
 				isPosition = true;
-				lowestLowRsi = 100;
-				highestHighRsi = 0;
-				doBuy = false;
-				doSell = false;
+//				lowestLowRsi = 100;
+//				highestHighRsi = 0;
+//				doBuy = false;
+//				doSell = false;
 			}
 			logger.info("RSI指标:{}:开{}仓成功，订单号ordId:{};执行结果sCode:{};执行信息sMsg:{}=======>当前余额:{}", rsi12, direction,
 					order.getString("ordId"), order.getString(sCode), order.getString("sMsg"), usdtCashBal);
@@ -314,6 +321,9 @@ public class TradeServiceImpl implements TradeService {
 		indicatorDto.setMacdTurningPoint(-1);
 		indicatorDto.setRsi6Arr(new double[] { dRsi6[dRsi6.length - 5], dRsi6[dRsi6.length - 4],
 				dRsi6[dRsi6.length - 3], dRsi6[dRsi6.length - 2], dRsi6[dRsi6.length - 1] });
+		indicatorDto.setRsi12Arr(
+				new double[] { dRsi12[dRsi12.length - 6], dRsi12[dRsi12.length - 5], dRsi12[dRsi12.length - 4],
+						dRsi12[dRsi12.length - 3], dRsi12[dRsi12.length - 2], dRsi12[dRsi12.length - 1] });
 		return indicatorDto;
 	}
 
