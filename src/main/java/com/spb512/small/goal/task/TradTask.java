@@ -10,6 +10,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.okx.open.api.exception.ApiException;
 import com.spb512.small.goal.service.TradeService;
 
 /**
@@ -34,7 +35,14 @@ public class TradTask {
 	@Scheduled(cron = "0/1 * * * * ?")
 	public void openPositionTask() {
 //		logger.info("开仓");
-		tradeService.openPosition();
+//		long timeMillis = System.currentTimeMillis();
+//		logger.info("开仓方法开始:{}", timeMillis);
+		try {
+			tradeService.openPosition();
+		} catch (ApiException e) {
+			logger.info("捕获api异常:{}", e.getMessage());
+		}
+//		logger.info("开仓方法结束:{},耗时:{}毫秒", System.currentTimeMillis(), System.currentTimeMillis() - timeMillis);
 	}
 
 	/**
@@ -43,7 +51,14 @@ public class TradTask {
 	@Scheduled(cron = "0/1 * * * * ?")
 	public void closePositionTask() {
 //		logger.info("平仓");
-		tradeService.closePosition();
+//		long timeMillis = System.currentTimeMillis();
+//		logger.info("平仓方法开始:{}", timeMillis);
+		try {
+			tradeService.closePosition();
+		} catch (ApiException e) {
+			logger.info("捕获api异常:{}", e.getMessage());
+		}
+//		logger.info("平仓方法结束:{},耗时:{}毫秒", System.currentTimeMillis(), System.currentTimeMillis() - timeMillis);
 	}
 
 	/**
@@ -52,7 +67,14 @@ public class TradTask {
 	@Scheduled(cron = "0/1 * * * * ?")
 	public void checkPositionTask() {
 //		logger.info("检查持仓");
-		tradeService.checkPosition();
+//		long timeMillis = System.currentTimeMillis();
+//		logger.info("检查方法开始:{}", timeMillis);
+		try {
+			tradeService.checkPosition();
+		} catch (ApiException e) {
+			logger.info("捕获api异常:{}", e.getMessage());
+		}
+//		logger.info("检查方法结束:{},耗时:{}毫秒", System.currentTimeMillis(), System.currentTimeMillis() - timeMillis);
 	}
 
 }
