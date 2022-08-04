@@ -1,7 +1,6 @@
 package com.spb512.small.goal.service.impl;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -126,7 +125,7 @@ public class TradeServiceImpl implements TradeService {
 	/**
 	 * 收益率激活
 	 */
-	private double activateRatio = 0.03;
+	private double activateRatio = 0.025;
 	/**
 	 * 回调收益率
 	 */
@@ -134,7 +133,7 @@ public class TradeServiceImpl implements TradeService {
 	/**
 	 * 强制止损线
 	 */
-	private double stopLossLine = -0.10;
+	private double stopLossLine = -0.20;
 	/**
 	 * rsi12做空激活点
 	 */
@@ -146,7 +145,7 @@ public class TradeServiceImpl implements TradeService {
 	/**
 	 * 回调开仓点
 	 */
-	private double pullbackRsi = 0.1;
+	private double pullbackRsi = 0.01;
 	/**
 	 * 做多
 	 */
@@ -155,18 +154,6 @@ public class TradeServiceImpl implements TradeService {
 	 * 做空
 	 */
 	private boolean doSell = false;
-	/**
-	 * 做多
-	 */
-	private boolean doBuy2 = false;
-	/**
-	 * 做空
-	 */
-	private boolean doSell2 = false;
-	/**
-	 * 突变激活点
-	 */
-	private double activatePoint = 0.01;
 
 	@PostConstruct
 	public void init() {
@@ -213,13 +200,6 @@ public class TradeServiceImpl implements TradeService {
 		double rsi12 = indicatorDto.getRsi12();
 //		double rsi24 = indicatorDto.getRsi24();
 //		double[] rsi12Arr = indicatorDto.getRsi12Arr();
-
-		BigDecimal openPrice = candlesticksArray.getJSONArray(0).getBigDecimal(1);
-		BigDecimal currentPrice = candlesticksArray.getJSONArray(0).getBigDecimal(4);
-		doSell2 = currentPrice.subtract(openPrice).divide(openPrice, 4, RoundingMode.HALF_UP)
-				.compareTo(new BigDecimal(activatePoint)) > -1;
-		doBuy2 = openPrice.subtract(currentPrice).divide(openPrice, 4, RoundingMode.HALF_UP)
-				.compareTo(new BigDecimal(activatePoint)) > -1;
 		// 查询账户余额
 		JSONObject balanceObject = pvClient.executeSync(accountApi.getBalance(ccy));
 		JSONArray balanceArray = balanceObject.getJSONArray(data);
@@ -254,11 +234,7 @@ public class TradeServiceImpl implements TradeService {
 				doBuy = true;
 			}
 		}
-//		boolean buyFlag = rsi12Arr[0] < activateHighRsi12 && rsi12Arr[1] < activateHighRsi12
-//				&& rsi12Arr[2] > activateHighRsi12 && rsi12Arr[2] < activateHighRsi12 + 5;
-//		boolean sellFlag = rsi12Arr[0] > activateLowRsi12 && rsi12Arr[1] > activateLowRsi12
-//				&& rsi12Arr[2] < activateLowRsi12 && rsi12Arr[2] > activateLowRsi12 - 5;
-		if (doBuy || doSell || doBuy2 || doSell2) {
+		if (doBuy || doSell) {
 			// 获取最大开仓数量
 			JSONObject maxImun = pvClient
 					.executeSync(accountApi.getMaximumTradableSizeForInstrument(instId, mode, null, null));
@@ -275,7 +251,7 @@ public class TradeServiceImpl implements TradeService {
 			String direction = "做多";
 			String szNum = maxBuy;
 			logger.info("最大购买数量{};最大可卖数量:{}", maxBuy, maxSell);
-			if (doSell || doSell2) {
+			if (doSell) {
 				side = "sell";
 				szNum = maxSell;
 				direction = "做空";
@@ -292,16 +268,11 @@ public class TradeServiceImpl implements TradeService {
 			JSONArray orderArray = orderSync.getJSONArray(data);
 			JSONObject order = orderArray.getJSONObject(0);
 			if (order.getIntValue(sCode) == 0) {
-				if (doBuy2 || doSell2) {
-					logger.info("注意此次开仓为突变开仓！！！！！！！！！");
-				}
 				isPosition = true;
 				lowestLowRsi = 100;
 				highestHighRsi = 0;
 				doBuy = false;
 				doSell = false;
-				doBuy2 = false;
-				doSell2 = false;
 			}
 			logger.info("开{}仓成功，订单号ordId:{};执行结果sCode:{};执行信息sMsg:{}=======>当前余额:{}", direction,
 					order.getString("ordId"), order.getString(sCode), order.getString("sMsg"), usdtCashBal);
