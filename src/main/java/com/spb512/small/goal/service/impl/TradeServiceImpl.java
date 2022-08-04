@@ -1,6 +1,7 @@
 package com.spb512.small.goal.service.impl;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -133,7 +134,7 @@ public class TradeServiceImpl implements TradeService {
 	/**
 	 * 强制止损线
 	 */
-	private double stopLossLine = -0.15;
+	private double stopLossLine = -0.10;
 	/**
 	 * rsi12做空激活点
 	 */
@@ -213,10 +214,12 @@ public class TradeServiceImpl implements TradeService {
 //		double rsi24 = indicatorDto.getRsi24();
 //		double[] rsi12Arr = indicatorDto.getRsi12Arr();
 
-		double openPrice = candlesticksArray.getJSONArray(0).getDouble(1);
-		double currentPrice = candlesticksArray.getJSONArray(0).getDouble(4);
-		doSell2 = (currentPrice - openPrice) / openPrice > activatePoint;
-		doBuy2 = (openPrice - currentPrice) / openPrice > activatePoint;
+		BigDecimal openPrice = candlesticksArray.getJSONArray(0).getBigDecimal(1);
+		BigDecimal currentPrice = candlesticksArray.getJSONArray(0).getBigDecimal(4);
+		doSell2 = currentPrice.subtract(openPrice).divide(openPrice, 4, RoundingMode.HALF_UP)
+				.compareTo(new BigDecimal(activatePoint)) > -1;
+		doBuy2 = openPrice.subtract(currentPrice).divide(openPrice, 4, RoundingMode.HALF_UP)
+				.compareTo(new BigDecimal(activatePoint)) > -1;
 		// 查询账户余额
 		JSONObject balanceObject = pvClient.executeSync(accountApi.getBalance(ccy));
 		JSONArray balanceArray = balanceObject.getJSONArray(data);
@@ -289,11 +292,16 @@ public class TradeServiceImpl implements TradeService {
 			JSONArray orderArray = orderSync.getJSONArray(data);
 			JSONObject order = orderArray.getJSONObject(0);
 			if (order.getIntValue(sCode) == 0) {
+				if (doBuy2 || doSell2) {
+					logger.info("注意此次开仓为突变开仓！！！！！！！！！");
+				}
 				isPosition = true;
 				lowestLowRsi = 100;
 				highestHighRsi = 0;
 				doBuy = false;
 				doSell = false;
+				doBuy2 = false;
+				doSell2 = false;
 			}
 			logger.info("开{}仓成功，订单号ordId:{};执行结果sCode:{};执行信息sMsg:{}=======>当前余额:{}", direction,
 					order.getString("ordId"), order.getString(sCode), order.getString("sMsg"), usdtCashBal);
