@@ -86,7 +86,7 @@ public class TradeServiceImpl implements TradeService {
 	 * 香港时间开盘价k线：[6H/12H/1D/2D/3D/1W/1M/3M/6M/1Y]
 	 * UTC时间开盘价k线：[/6Hutc/12Hutc/1Dutc/2Dutc/3Dutc/1Wutc/1Mutc/3Mutc/6Mutc/1Yutc]
 	 */
-	private int intBar = 1;
+	private int intBar = 3;
 	/**
 	 * 时间粒度+单位
 	 */
@@ -125,7 +125,7 @@ public class TradeServiceImpl implements TradeService {
 	/**
 	 * 收益率激活
 	 */
-	private double activateRatio = 0.025;
+	private double activateRatio = 0.05;
 	/**
 	 * 回调收益率
 	 */
@@ -133,7 +133,7 @@ public class TradeServiceImpl implements TradeService {
 	/**
 	 * 强制止损线
 	 */
-	private double stopLossLine = -0.20;
+	private double stopLossLine = -0.30;
 	/**
 	 * rsi12做空激活点
 	 */
@@ -142,6 +142,10 @@ public class TradeServiceImpl implements TradeService {
 	 * rsi12做多激活点
 	 */
 	private double activateLowRsi12 = 20;
+//	/**
+//	 * rsi12激活范围
+//	 */
+//	private double activateRange = 3;
 	/**
 	 * 回调开仓点
 	 */
@@ -183,14 +187,21 @@ public class TradeServiceImpl implements TradeService {
 		}
 		if (publicDataApi == null) {
 			publicDataApi = pbClient.createService(PublicDataApi.class);
+			//初始化市价交易单次最大买和卖的数量
+			JSONObject instrumentsSync = pbClient.executeSync(publicDataApi.getInstruments(instType, null, instId));
+			maxBuyOrSell = instrumentsSync.getJSONArray(data).getJSONObject(0).getLongValue("maxMktSz");
 		}
 	}
 
 	@Override
 	public synchronized void openPosition() {
-		if (isPosition) {
+		// 当前是否有持仓
+		JSONObject positionsObject = pvClient.executeSync(accountApi.getPositions(instType, null, null));
+		JSONArray jsonArray = positionsObject.getJSONArray(data);
+		if (!jsonArray.isEmpty() && isPosition) {
 			return;
 		}
+
 		// 查询k线数据(标记价格)
 		JSONObject candlesticksSync = pbClient
 				.executeSync(marketDataApi.getMarkPriceCandlesticks(instId, null, null, bar, limit));
@@ -274,8 +285,8 @@ public class TradeServiceImpl implements TradeService {
 				doBuy = false;
 				doSell = false;
 			}
-			logger.info("开{}仓成功，订单号ordId:{};执行结果sCode:{};执行信息sMsg:{}=======>当前余额:{}", direction,
-					order.getString("ordId"), order.getString(sCode), order.getString("sMsg"), usdtCashBal);
+			logger.info("开{}仓,订单号ordId:{};执行结果sCode:{};执行信息sMsg:{}=======>当前余额:{}", direction, order.getString("ordId"),
+					order.getString(sCode), order.getString("sMsg"), usdtCashBal);
 		}
 	}
 
@@ -339,7 +350,7 @@ public class TradeServiceImpl implements TradeService {
 		// 当前是否有持仓
 		JSONObject positionsObject = pvClient.executeSync(accountApi.getPositions(instType, null, null));
 		JSONArray jsonArray = positionsObject.getJSONArray(data);
-		if (jsonArray.isEmpty()) {
+		if (jsonArray.isEmpty() && !isPosition) {
 			return;
 		}
 		JSONObject uplRatioObject = jsonArray.getJSONObject(0);
