@@ -1,37 +1,39 @@
-{"properties": [
-  {
-    "name": "okx.end.point",
-    "type": "java.lang.String",
-    "description": "A description for 'okx.end.point'"
-  },
-  {
-    "name": "okx.api.key",
-    "type": "java.lang.String",
-    "description": "A description for 'okx.api.key'"
-  },
-  {
-    "name": "okx.secre.key",
-    "type": "java.lang.String",
-    "description": "A description for 'okx.secre.key'"
-  },
-  {
-    "name": "okx.passphrase",
-    "type": "java.lang.String",
-    "description": "A description for 'okx.passphrase'"
-  },
-  {
-    "name": "okx.simulated",
-    "type": "java.lang.String",
-    "description": "A description for 'okx.simulated'"
-  },
-  {
-    "name": "okx.proxy.server.address",
-    "type": "java.lang.String",
-    "description": "A description for 'okx.proxy.server.address'"
-  },
-  {
-    "name": "okx.proxy.server.port",
-    "type": "java.lang.String",
-    "description": "A description for 'okx.proxy.server.port'"
-  }
-]}
+{
+  "properties": [
+    {
+      "name": "okx.end.point",
+      "type": "java.lang.String",
+      "description": "A description for 'okx.end.point'"
+    },
+    {
+      "name": "okx.api.key",
+      "type": "java.lang.String",
+      "description": "A description for 'okx.api.key'"
+    },
+    {
+      "name": "okx.secre.key",
+      "type": "java.lang.String",
+      "description": "A description for 'okx.secre.key'"
+    },
+    {
+      "name": "okx.passphrase",
+      "type": "java.lang.String",
+      "description": "A description for 'okx.passphrase'"
+    },
+    {
+      "name": "okx.simulated",
+      "type": "java.lang.String",
+      "description": "A description for 'okx.simulated'"
+    },
+    {
+      "name": "okx.proxy.server.address",
+      "type": "java.lang.String",
+      "description": "A description for 'okx.proxy.server.address'"
+    },
+    {
+      "name": "okx.proxy.server.port",
+      "type": "java.lang.String",
+      "description": "A description for 'okx.proxy.server.port'"
+    }
+  ]
+}
