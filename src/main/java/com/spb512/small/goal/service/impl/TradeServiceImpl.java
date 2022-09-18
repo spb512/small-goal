@@ -200,11 +200,6 @@ public class TradeServiceImpl implements TradeService {
         if(isPosition){
             return;
         }
-        JSONObject positionsObject = pvClient.executeSync(accountApi.getPositions(instType, null, null));
-        JSONArray jsonArray = positionsObject.getJSONArray(data);
-        if (!jsonArray.isEmpty()) {
-            return;
-        }
 
         // 查询k线数据(标记价格)
         JSONObject candlesticksSync = pbClient
@@ -215,17 +210,7 @@ public class TradeServiceImpl implements TradeService {
         double rsi12 = indicatorDto.getRsi12();
 //		double rsi24 = indicatorDto.getRsi24();
 //		double[] rsi12Arr = indicatorDto.getRsi12Arr();
-        // 查询账户余额
-        JSONObject balanceObject = pvClient.executeSync(accountApi.getBalance(ccy));
-        JSONArray balanceArray = balanceObject.getJSONArray(data);
-        JSONObject jsonObject = balanceArray.getJSONObject(0);
-        JSONArray detailsArray = jsonObject.getJSONArray("details");
-        JSONObject usdtBalance = detailsArray.getJSONObject(0);
-        BigDecimal usdtCashBal = usdtBalance.getBigDecimal("cashBal");
-        if (usdtCashBal.compareTo(new BigDecimal(minStartup)) < 0) {
-            logger.info("账号余额:{},余额过低小于{}", usdtCashBal, minStartup);
-            return;
-        }
+
         if ((rsi12 > activateHighRsi12) && (rsi12 > highestHighRsi)) {
             highestHighRsi = rsi12;
             logger.info("highestHighRsi更新，当前为:{}", highestHighRsi);
@@ -242,6 +227,23 @@ public class TradeServiceImpl implements TradeService {
             doBuy = true;
         }
         if (doBuy || doSell) {
+            //再次确认是否有持仓
+            JSONObject positionsObject = pvClient.executeSync(accountApi.getPositions(instType, null, null));
+            JSONArray jsonArray = positionsObject.getJSONArray(data);
+            if (!jsonArray.isEmpty()) {
+                return;
+            }
+            // 查询账户余额
+            JSONObject balanceObject = pvClient.executeSync(accountApi.getBalance(ccy));
+            JSONArray balanceArray = balanceObject.getJSONArray(data);
+            JSONObject jsonObject = balanceArray.getJSONObject(0);
+            JSONArray detailsArray = jsonObject.getJSONArray("details");
+            JSONObject usdtBalance = detailsArray.getJSONObject(0);
+            BigDecimal usdtCashBal = usdtBalance.getBigDecimal("cashBal");
+            if (usdtCashBal.compareTo(new BigDecimal(minStartup)) < 0) {
+                logger.info("账号余额:{},余额过低小于{}", usdtCashBal, minStartup);
+                return;
+            }
             // 获取最大开仓数量
             JSONObject maxImun = pvClient
                     .executeSync(accountApi.getMaximumTradableSizeForInstrument(instId, mode, null, null, null, null));
