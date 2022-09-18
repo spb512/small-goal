@@ -156,6 +156,10 @@ public class TradeServiceImpl implements TradeService {
      */
     private boolean doSell = false;
 
+    /**
+     * 需要减少(最大交易数量大于实际数量，需要减1)
+     */
+    private boolean needReduce = false;
     @PostConstruct
     public void init() {
         pvClient = privateClient.getClient();
@@ -240,20 +244,24 @@ public class TradeServiceImpl implements TradeService {
                     .executeSync(accountApi.getMaximumTradableSizeForInstrument(instId, mode, null, null, null, null));
             JSONArray maxInumArray = maxImun.getJSONArray(data);
             JSONObject maxInumObject = maxInumArray.getJSONObject(0);
-            String maxBuy = maxInumObject.getString("maxBuy");
-            String maxSell = maxInumObject.getString("maxSell");
+            long maxBuy = maxInumObject.getLongValue("maxBuy");
+            long maxSell = maxInumObject.getLongValue("maxSell");
 
-            if (Long.parseLong(maxBuy) > maxBuyOrSell || Long.parseLong(maxSell) > maxBuyOrSell) {
-                maxBuy = maxBuyOrSell + "";
-                maxSell = maxBuyOrSell + "";
+            if (maxBuy > maxBuyOrSell || maxSell > maxBuyOrSell) {
+                maxBuy = maxBuyOrSell;
+                maxSell = maxBuyOrSell;
+            }
+            if(needReduce){
+                maxBuy--;
+                maxSell--;
             }
             String side = "buy";
             String direction = "做多";
-            String szNum = maxBuy;
+            String szNum = maxBuy + "";
             logger.info("最大购买数量{};最大可卖数量:{}", maxBuy, maxSell);
             if (doSell) {
                 side = "sell";
-                szNum = maxSell;
+                szNum = maxSell + "";
                 direction = "做空";
             }
             PlaceOrder placeOrder = new PlaceOrder();
@@ -267,12 +275,16 @@ public class TradeServiceImpl implements TradeService {
                     .executeSync(this.tradeApi.placeOrder(JSONObject.parseObject(JSON.toJSONString(placeOrder))));
             JSONArray orderArray = orderSync.getJSONArray(data);
             JSONObject order = orderArray.getJSONObject(0);
-            if (order.getIntValue(sCode) == 0) {
+            int resultCode =  order.getIntValue(sCode);
+            if (resultCode == 0) {
                 isPosition = true;
                 lowestLowRsi = 100;
                 highestHighRsi = 0;
                 doBuy = false;
                 doSell = false;
+                needReduce = false;
+            } else if(resultCode == 51008){
+                needReduce = true;
             }
             logger.info("开{}仓,订单号ordId:{};执行结果sCode:{};执行信息sMsg:{}=======>当前余额:{}", direction, order.getString("ordId"),
                     order.getString(sCode), order.getString("sMsg"), usdtCashBal);
