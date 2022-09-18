@@ -108,8 +108,6 @@ public class TradeServiceImpl implements TradeService {
      * 最低做空点
      */
     private double lowestLowRsi = 100;
-    //	private double[] dHigh = new double[Integer.parseInt(limit)];
-//	private double[] dLow = new double[Integer.parseInt(limit)];
     private double[] dClose = new double[Integer.parseInt(limit)];
     /**
      * 最小开仓资金
@@ -139,10 +137,6 @@ public class TradeServiceImpl implements TradeService {
      * rsi12做多激活点
      */
     private double activateLowRsi12 = 20;
-//	/**
-//	 * rsi12激活范围
-//	 */
-//	private double activateRange = 3;
     /**
      * 回调开仓点
      */
@@ -192,14 +186,23 @@ public class TradeServiceImpl implements TradeService {
             JSONObject instrumentsSync = pbClient.executeSync(publicDataApi.getInstruments(instType, null, instId));
             maxBuyOrSell = instrumentsSync.getJSONArray(data).getJSONObject(0).getLongValue("maxMktSz");
         }
+        if (tradeApi == null) {
+            tradeApi = pvClient.createService(TradeAPI.class);
+        }
+        if (marketDataApi == null) {
+            marketDataApi = pbClient.createService(MarketDataAPI.class);
+        }
     }
 
     @Override
     public synchronized void openPosition() {
         // 当前是否有持仓
+        if(isPosition){
+            return;
+        }
         JSONObject positionsObject = pvClient.executeSync(accountApi.getPositions(instType, null, null));
         JSONArray jsonArray = positionsObject.getJSONArray(data);
-        if (!jsonArray.isEmpty() && isPosition) {
+        if (!jsonArray.isEmpty()) {
             return;
         }
 
@@ -337,21 +340,13 @@ public class TradeServiceImpl implements TradeService {
      */
     @Override
     public void closePosition() {
-
-        if (accountApi == null) {
-            accountApi = pvClient.createService(AccountAPI.class);
-        }
-        if (tradeApi == null) {
-            tradeApi = pvClient.createService(TradeAPI.class);
-        }
-
-        if (marketDataApi == null) {
-            marketDataApi = pbClient.createService(MarketDataAPI.class);
-        }
         // 当前是否有持仓
+        if(!isPosition){
+            return;
+        }
         JSONObject positionsObject = pvClient.executeSync(accountApi.getPositions(instType, null, null));
         JSONArray jsonArray = positionsObject.getJSONArray(data);
-        if (jsonArray.isEmpty() && !isPosition) {
+        if (jsonArray.isEmpty()) {
             return;
         }
         JSONObject uplRatioObject = jsonArray.getJSONObject(0);
@@ -396,11 +391,10 @@ public class TradeServiceImpl implements TradeService {
 
     @Override
     public synchronized void checkPosition() {
-
-        if (accountApi == null) {
-            accountApi = pvClient.createService(AccountAPI.class);
-        }
         // 当前是否有持仓
+        if(!isPosition){
+            return;
+        }
         JSONObject positionsObject = pvClient.executeSync(accountApi.getPositions(instType, null, null));
         JSONArray jsonArray = positionsObject.getJSONArray(data);
         if (jsonArray.isEmpty()) {
