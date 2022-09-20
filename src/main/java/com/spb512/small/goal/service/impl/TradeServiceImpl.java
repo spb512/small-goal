@@ -83,7 +83,7 @@ public class TradeServiceImpl implements TradeService {
      * 香港时间开盘价k线：[6H/12H/1D/2D/3D/1W/1M/3M/6M/1Y]
      * UTC时间开盘价k线：[/6Hutc/12Hutc/1Dutc/2Dutc/3Dutc/1Wutc/1Mutc/3Mutc/6Mutc/1Yutc]
      */
-    private int intBar = 3;
+    private int intBar = 5;
     /**
      * 时间粒度+单位
      */
@@ -128,7 +128,7 @@ public class TradeServiceImpl implements TradeService {
     /**
      * 强制止损线
      */
-    private double stopLossLine = -0.30;
+    private double stopLossLine = -0.25;
     /**
      * rsi12做空激活点
      */
