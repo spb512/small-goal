@@ -19,7 +19,7 @@ import javax.annotation.Resource;
 @Component
 @EnableScheduling
 @EnableAsync
-@Async
+@Async(value = "applicationTaskExecutor")
 public class TradTask {
 
     Logger logger = LoggerFactory.getLogger(getClass());
