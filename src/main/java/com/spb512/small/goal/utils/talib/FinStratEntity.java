@@ -7,6 +7,7 @@ package com.spb512.small.goal.utils.talib;
  */
 public class FinStratEntity {
     private int retCode;
+    private double[] rsiReal;
     private double[] sarReal;
     private double[] difMacd;
     private double[] deaMacd;
@@ -61,4 +62,11 @@ public class FinStratEntity {
         this.cciReal = cciReal;
     }
 
+    public double[] getRsiReal() {
+        return rsiReal;
+    }
+
+    public void setRsiReal(double[] rsiReal) {
+        this.rsiReal = rsiReal;
+    }
 }

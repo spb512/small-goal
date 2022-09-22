@@ -47,7 +47,7 @@ public class FinStratModel {
     /**
      * @param inClose      收盘价
      * @param inTimePeriod 时间周期
-     * @return SRI计算结果数据
+     * @return RSI计算结果数据
      */
     public FinStratEntity calRsi(double[] inClose, int inTimePeriod) {
 
@@ -62,7 +62,7 @@ public class FinStratModel {
                 sriReal);
         if (retCode == RetCode.Success) {
             fiResult.setRetCode(0);
-            fiResult.setSarReal(sriReal);
+            fiResult.setRsiReal(sriReal);
         }
         return fiResult;
     }

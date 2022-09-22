@@ -128,7 +128,7 @@ public class TradeServiceImpl implements TradeService {
     /**
      * 强制止损线
      */
-    private double stopLossLine = -0.20;
+    private double stopLossLine = -0.15;
     /**
      * rsi12做空激活点
      */
@@ -154,6 +154,7 @@ public class TradeServiceImpl implements TradeService {
      * 需要减少(最大交易数量大于实际数量，需要减1)
      */
     private boolean needReduce = false;
+
     @PostConstruct
     public void init() {
         pvClient = privateClient.getClient();
@@ -197,7 +198,7 @@ public class TradeServiceImpl implements TradeService {
     @Override
     public synchronized void openPosition() {
         // 当前是否有持仓
-        if(isPosition){
+        if (isPosition) {
             return;
         }
 
@@ -256,7 +257,7 @@ public class TradeServiceImpl implements TradeService {
                 maxBuy = maxBuyOrSell;
                 maxSell = maxBuyOrSell;
             }
-            if(needReduce){
+            if (needReduce) {
                 maxBuy--;
                 maxSell--;
             }
@@ -280,7 +281,7 @@ public class TradeServiceImpl implements TradeService {
                     .executeSync(this.tradeApi.placeOrder(JSONObject.parseObject(JSON.toJSONString(placeOrder))));
             JSONArray orderArray = orderSync.getJSONArray(data);
             JSONObject order = orderArray.getJSONObject(0);
-            int resultCode =  order.getIntValue(sCode);
+            int resultCode = order.getIntValue(sCode);
             if (resultCode == 0) {
                 isPosition = true;
                 lowestLowRsi = 100;
@@ -288,7 +289,7 @@ public class TradeServiceImpl implements TradeService {
                 doBuy = false;
                 doSell = false;
                 needReduce = false;
-            } else if(resultCode == 51008){
+            } else if (resultCode == 51008) {
                 needReduce = true;
             }
             logger.info("开{}仓,订单号ordId:{};执行结果sCode:{};执行信息sMsg:{}=======>当前余额:{}", direction, order.getString("ordId"),
@@ -311,7 +312,7 @@ public class TradeServiceImpl implements TradeService {
 //		FinStratEntity rsi6FinEntity = finModel.calRsi(dClose, 6);
 //		double dRsi6[] = rsi6FinEntity.getSarReal();
         FinStratEntity rsi12FinEntity = finModel.calRsi(dClose, 12);
-        double[] dRsi12 = rsi12FinEntity.getSarReal();
+        double[] dRsi12 = rsi12FinEntity.getRsiReal();
 //		FinStratEntity rsi24FinEntity = finModel.calRsi(dClose, 24);
 //		double dRsi24[] = rsi24FinEntity.getSarReal();
 
@@ -343,7 +344,7 @@ public class TradeServiceImpl implements TradeService {
     @Override
     public void closePosition() {
         // 当前是否有持仓
-        if(!isPosition){
+        if (!isPosition) {
             return;
         }
         JSONObject positionsObject = pvClient.executeSync(accountApi.getPositions(instType, null, null));
@@ -394,7 +395,7 @@ public class TradeServiceImpl implements TradeService {
     @Override
     public synchronized void checkPosition() {
         // 当前是否有持仓
-        if(!isPosition){
+        if (!isPosition) {
             return;
         }
         JSONObject positionsObject = pvClient.executeSync(accountApi.getPositions(instType, null, null));
