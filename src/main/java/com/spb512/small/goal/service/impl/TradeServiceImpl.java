@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.okex.open.api.bean.account.param.SetLeverage;
+import com.okex.open.api.bean.account.param.SetPositionMode;
 import com.okex.open.api.bean.trade.param.ClosePositions;
 import com.okex.open.api.bean.trade.param.PlaceOrder;
 import com.okex.open.api.client.APIClient;
@@ -154,6 +155,12 @@ public class TradeServiceImpl implements TradeService {
      * 需要减少(最大交易数量大于实际数量，需要减1)
      */
     private boolean needReduce = false;
+    /**
+     * 持仓方式
+     * long_short_mode：双向持仓 net_mode：单向持仓
+     * 仅适用交割/永续
+     */
+    private String posMode = "net_mode";
 
     @PostConstruct
     public void init() {
@@ -161,18 +168,18 @@ public class TradeServiceImpl implements TradeService {
         pbClient = publicClient.getClient();
         if (accountApi == null) {
             accountApi = pvClient.createService(AccountAPI.class);
-            // 查询杠杆倍数
-            JSONObject leverAgeSync = pvClient.executeSync(accountApi.getLeverage(instId, mode));
-            String leverString = leverAgeSync.getJSONArray(data).getJSONObject(0).getString("lever");
-            if (!lever.equals(leverString)) {
-                // 设置杠杆倍速
-                SetLeverage setLeverage = new SetLeverage();
-                setLeverage.setInstId(instId);
-                setLeverage.setLever(lever);
-                setLeverage.setMgnMode(mode);
-                pvClient.executeSync(accountApi.setLeverage(JSONObject.parseObject(JSON.toJSONString(setLeverage))));
-                logger.info("设置杠杆倍速为{}成功", lever);
-            }
+            // 初始化持仓模式
+            SetPositionMode setPositionMode = new SetPositionMode();
+            setPositionMode.setPosMode(posMode);
+            pvClient.executeSync(accountApi.setPositionMode(JSONObject.parseObject(JSON.toJSONString(setPositionMode))));
+            logger.info("初始化持仓模式为{}成功", posMode);
+            // 初始化杠杆倍速
+            SetLeverage setLeverage = new SetLeverage();
+            setLeverage.setInstId(instId);
+            setLeverage.setLever(lever);
+            setLeverage.setMgnMode(mode);
+            pvClient.executeSync(accountApi.setLeverage(JSONObject.parseObject(JSON.toJSONString(setLeverage))));
+            logger.info("初始化杠杆倍速为{}成功", lever);
         }
         if (tradeApi == null) {
             tradeApi = pvClient.createService(TradeAPI.class);
@@ -186,12 +193,6 @@ public class TradeServiceImpl implements TradeService {
             //初始化市价交易单次最大买和卖的数量
             JSONObject instrumentsSync = pbClient.executeSync(publicDataApi.getInstruments(instType, null, instId));
             maxBuyOrSell = instrumentsSync.getJSONArray(data).getJSONObject(0).getLongValue("maxMktSz");
-        }
-        if (tradeApi == null) {
-            tradeApi = pvClient.createService(TradeAPI.class);
-        }
-        if (marketDataApi == null) {
-            marketDataApi = pbClient.createService(MarketDataAPI.class);
         }
     }
 
