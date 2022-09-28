@@ -129,15 +129,15 @@ public class TradeServiceImpl implements TradeService {
     /**
      * 强制止损线
      */
-    private double stopLossLine = -0.05;
+    private double stopLossLine = -0.10;
     /**
      * rsi12做空激活点
      */
-    private double activateHighRsi12 = 82;
+    private double activateHighRsi12 = 81;
     /**
      * rsi12做多激活点
      */
-    private double activateLowRsi12 = 18;
+    private double activateLowRsi12 = 19;
     /**
      * 回调开仓点
      */
@@ -243,6 +243,8 @@ public class TradeServiceImpl implements TradeService {
             JSONObject usdtBalance = detailsArray.getJSONObject(0);
             BigDecimal usdtCashBal = usdtBalance.getBigDecimal("cashBal");
             if (usdtCashBal.compareTo(new BigDecimal(minStartup)) < 0) {
+                doBuy = false;
+                doSell = false;
                 logger.info("账号余额:{},余额过低小于{}", usdtCashBal, minStartup);
                 return;
             }
