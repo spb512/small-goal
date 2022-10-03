@@ -303,7 +303,7 @@ public class TradeServiceImpl implements TradeService {
             } else if (resultCode == 51008) {
                 needReduce = true;
             }
-            logger.info("开{}仓,订单号ordId:{};执行结果sCode:{};执行信息sMsg:{}=======>当前余额:{}", direction, order.getString("ordId"),
+            logger.info("开{}仓,订单号ordId:{};执行结果sCode:{};执行信息sMsg:{};当前余额:{}", direction, order.getString("ordId"),
                     order.getString(sCode), order.getString("sMsg"), usdtCashBal);
         }
     }
