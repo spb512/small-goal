@@ -129,15 +129,15 @@ public class TradeServiceImpl implements TradeService {
     /**
      * 强制止损线
      */
-    private double stopLossLine = -0.10;
+    private double stopLossLine = -0.08;
     /**
      * rsi12做空激活点
      */
-    private double activateHighRsi12 = 81;
+    private double activateHighRsi12 = 80;
     /**
      * rsi12做多激活点
      */
-    private double activateLowRsi12 = 19;
+    private double activateLowRsi12 = 20;
     /**
      * 回调开仓点
      */
@@ -180,6 +180,13 @@ public class TradeServiceImpl implements TradeService {
             setLeverage.setMgnMode(mode);
             pvClient.executeSync(accountApi.setLeverage(JSONObject.parseObject(JSON.toJSONString(setLeverage))));
             logger.info("初始化杠杆倍速为{}成功", lever);
+            //初始化持仓标记
+            JSONObject positionsObject = pvClient.executeSync(accountApi.getPositions(instType, null, null));
+            JSONArray jsonArray = positionsObject.getJSONArray(data);
+            if (!jsonArray.isEmpty()) {
+                isPosition = true;
+                logger.info("当前有持仓，初始化持仓标记isPosition为{}成功", isPosition);
+            }
         }
         if (tradeApi == null) {
             tradeApi = pvClient.createService(TradeAPI.class);
@@ -193,6 +200,7 @@ public class TradeServiceImpl implements TradeService {
             //初始化市价交易单次最大买和卖的数量
             JSONObject instrumentsSync = pbClient.executeSync(publicDataApi.getInstruments(instType, null, instId));
             maxBuyOrSell = instrumentsSync.getJSONArray(data).getJSONObject(0).getLongValue("maxMktSz");
+            logger.info("初始化市价交易单次最大买和卖的数量为{}成功", maxBuyOrSell);
         }
     }
 
@@ -359,20 +367,14 @@ public class TradeServiceImpl implements TradeService {
         BigDecimal uplRatio = uplRatioObject.getBigDecimal("uplRatio");
 
         // 判断是否达到止盈止损条件
-        // 1、查询k线数据(标记价格)
-        JSONObject candlesticksSync = pbClient
-                .executeSync(marketDataApi.getMarkPriceCandlesticks(instId, null, null, bar, limit));
-        JSONArray candlesticksArray = candlesticksSync.getJSONArray(data);
-        // 2、计算指标
-        IndicatorDto indicatorDto = getIndicators(candlesticksArray);
-        double rsi12 = indicatorDto.getRsi12();
         if ((uplRatio.compareTo(BigDecimal.valueOf(activateRatio)) > -1) && (uplRatio.compareTo(highestUplRatio) > 0)) {
             highestUplRatio = uplRatio;
-            logger.info("highestUplRatio更新，当前为:{};rsi12指数为:{}", highestUplRatio, rsi12);
+            logger.info("highestUplRatio更新，当前为:{}", highestUplRatio);
         }
         if ((highestUplRatio.compareTo(BigDecimal.valueOf(activateRatio)) > -1) && (uplRatio.compareTo(highestUplRatio.subtract(BigDecimal.valueOf(pullbackRatio))) < 1)) {
             sell();
-            logger.info("平仓收益率为:{};rsi12指数为:{}", uplRatio, rsi12);
+            logger.info("平仓收益率为:{}", uplRatio);
+            logger.info("<=====================分隔符=======================>");
         }
     }
 
@@ -391,7 +393,7 @@ public class TradeServiceImpl implements TradeService {
         if (closePosition.getIntValue(code) == 0) {
             isPosition = false;
         }
-        logger.info("平仓操作code:{};msg:{};=========>当前余额:{}", closePosition.getString(code),
+        logger.info("平仓操作code:{};msg:{};当前余额:{}", closePosition.getString(code),
                 closePosition.getString("msg"), usdtCashBal);
     }
 
@@ -409,9 +411,10 @@ public class TradeServiceImpl implements TradeService {
         JSONObject uplRatioObject = jsonArray.getJSONObject(0);
         BigDecimal uplRatio = uplRatioObject.getBigDecimal("uplRatio");
         if (uplRatio.compareTo(BigDecimal.valueOf(stopLossLine)) < 0) {
-            logger.info("当前收益率{}", uplRatio);
             logger.info("达到强制止损线{}%", stopLossLine * 100);
             sell();
+            logger.info("当前收益率{}", uplRatio);
+            logger.info("<=====================分隔符=======================>");
         }
     }
 }
