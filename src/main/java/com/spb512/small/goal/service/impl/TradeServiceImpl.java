@@ -172,7 +172,7 @@ public class TradeServiceImpl implements TradeService {
             SetPositionMode setPositionMode = new SetPositionMode();
             setPositionMode.setPosMode(posMode);
             pvClient.executeSync(accountApi.setPositionMode(JSONObject.parseObject(JSON.toJSONString(setPositionMode))));
-            logger.info("初始化持仓模式为{}成功", posMode);
+            logger.info("初始化持仓模式为单向持仓成功");
             // 初始化杠杆倍速
             SetLeverage setLeverage = new SetLeverage();
             setLeverage.setInstId(instId);
@@ -185,7 +185,7 @@ public class TradeServiceImpl implements TradeService {
             JSONArray jsonArray = positionsObject.getJSONArray(data);
             if (!jsonArray.isEmpty()) {
                 isPosition = true;
-                logger.info("当前有持仓，初始化持仓标记isPosition为{}成功", isPosition);
+                logger.info("当前有持仓，初始化持仓标记isPosition为true成功");
             }
         }
         if (tradeApi == null) {
