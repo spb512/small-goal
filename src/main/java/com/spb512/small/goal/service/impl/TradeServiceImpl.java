@@ -62,7 +62,7 @@ public class TradeServiceImpl implements TradeService {
     /**
      * 产品id
      */
-    private String instId = "ETH-USDT-SWAP";
+    private String instId = "BTC-USDT-SWAP";
     /**
      * 杠杆倍数
      */
