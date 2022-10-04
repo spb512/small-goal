@@ -303,8 +303,54 @@ public class TradeServiceImpl implements TradeService {
             } else if (resultCode == 51008) {
                 needReduce = true;
             }
-            logger.info("开{}仓,订单号ordId:{};执行结果sCode:{};执行信息sMsg:{};当前余额:{}", direction, order.getString("ordId"),
+            logger.info("开{}仓,订单号ordId:{};结果sCode:{};信息sMsg:{};当前余额:{}", direction, order.getString("ordId"),
                     order.getString(sCode), order.getString("sMsg"), usdtCashBal);
+        }
+    }
+
+    /**
+     * 平仓
+     */
+    @Override
+    public synchronized void closePosition() {
+        // 当前是否有持仓
+        if (!isPosition) {
+            return;
+        }
+        JSONObject positionsObject = pvClient.executeSync(accountApi.getPositions(instType, null, null));
+        JSONArray jsonArray = positionsObject.getJSONArray(data);
+        if (jsonArray.isEmpty()) {
+            return;
+        }
+        JSONObject uplRatioObject = jsonArray.getJSONObject(0);
+        BigDecimal uplRatio = uplRatioObject.getBigDecimal("uplRatio");
+
+        // 判断是否达到止盈止损条件
+        if ((uplRatio.compareTo(BigDecimal.valueOf(activateRatio)) > -1) && (uplRatio.compareTo(highestUplRatio) > 0)) {
+            highestUplRatio = uplRatio;
+            logger.info("highestUplRatio更新，当前为:{}", highestUplRatio);
+        }
+        if ((highestUplRatio.compareTo(BigDecimal.valueOf(activateRatio)) > -1) && (uplRatio.compareTo(highestUplRatio.subtract(BigDecimal.valueOf(pullbackRatio))) < 1)) {
+            sell(uplRatioObject, uplRatio);
+        }
+    }
+
+    @Override
+    public synchronized void checkPosition() {
+        // 当前是否有持仓
+        if (!isPosition) {
+            return;
+        }
+        JSONObject positionsObject = pvClient.executeSync(accountApi.getPositions(instType, null, null));
+        JSONArray jsonArray = positionsObject.getJSONArray(data);
+        if (jsonArray.isEmpty()) {
+            return;
+        }
+        JSONObject uplRatioObject = jsonArray.getJSONObject(0);
+        BigDecimal uplRatio = uplRatioObject.getBigDecimal("uplRatio");
+        if (uplRatio.compareTo(BigDecimal.valueOf(stopLossLine)) < 0) {
+            logger.info("达到强制止损线{}%", stopLossLine * 100);
+            sell(uplRatioObject, uplRatio);
         }
     }
 
@@ -349,36 +395,7 @@ public class TradeServiceImpl implements TradeService {
         return indicatorDto;
     }
 
-    /**
-     * 平仓
-     */
-    @Override
-    public void closePosition() {
-        // 当前是否有持仓
-        if (!isPosition) {
-            return;
-        }
-        JSONObject positionsObject = pvClient.executeSync(accountApi.getPositions(instType, null, null));
-        JSONArray jsonArray = positionsObject.getJSONArray(data);
-        if (jsonArray.isEmpty()) {
-            return;
-        }
-        JSONObject uplRatioObject = jsonArray.getJSONObject(0);
-        BigDecimal uplRatio = uplRatioObject.getBigDecimal("uplRatio");
-
-        // 判断是否达到止盈止损条件
-        if ((uplRatio.compareTo(BigDecimal.valueOf(activateRatio)) > -1) && (uplRatio.compareTo(highestUplRatio) > 0)) {
-            highestUplRatio = uplRatio;
-            logger.info("highestUplRatio更新，当前为:{}", highestUplRatio);
-        }
-        if ((highestUplRatio.compareTo(BigDecimal.valueOf(activateRatio)) > -1) && (uplRatio.compareTo(highestUplRatio.subtract(BigDecimal.valueOf(pullbackRatio))) < 1)) {
-            sell();
-            logger.info("平仓收益率为:{}", uplRatio);
-            logger.info("<=====================分隔符=======================>");
-        }
-    }
-
-    private synchronized void sell() {
+    private void sell(JSONObject uplRatioObject, BigDecimal uplRatio) {
         ClosePositions closePositions = new ClosePositions();
         closePositions.setInstId(instId);
         closePositions.setMgnMode(mode);
@@ -393,28 +410,11 @@ public class TradeServiceImpl implements TradeService {
         if (closePosition.getIntValue(code) == 0) {
             isPosition = false;
         }
+        BigDecimal avgPx = uplRatioObject.getBigDecimal("avgPx");
+        BigDecimal markPx = uplRatioObject.getBigDecimal("markPx");
+        logger.info("开仓均价:{};当前价格:{};当前收益率:{}", avgPx, markPx, uplRatio);
         logger.info("平仓操作code:{};msg:{};当前余额:{}", closePosition.getString(code),
                 closePosition.getString("msg"), usdtCashBal);
-    }
-
-    @Override
-    public synchronized void checkPosition() {
-        // 当前是否有持仓
-        if (!isPosition) {
-            return;
-        }
-        JSONObject positionsObject = pvClient.executeSync(accountApi.getPositions(instType, null, null));
-        JSONArray jsonArray = positionsObject.getJSONArray(data);
-        if (jsonArray.isEmpty()) {
-            return;
-        }
-        JSONObject uplRatioObject = jsonArray.getJSONObject(0);
-        BigDecimal uplRatio = uplRatioObject.getBigDecimal("uplRatio");
-        if (uplRatio.compareTo(BigDecimal.valueOf(stopLossLine)) < 0) {
-            logger.info("达到强制止损线{}%", stopLossLine * 100);
-            sell();
-            logger.info("当前收益率{}", uplRatio);
-            logger.info("<=====================分隔符=======================>");
-        }
+        logger.info("<=====================分隔符=======================>");
     }
 }
