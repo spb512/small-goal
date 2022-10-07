@@ -121,7 +121,7 @@ public class TradeServiceImpl implements TradeService {
     /**
      * 收益率激活
      */
-    private double activateRatio = 0.06;
+    private double activateRatio = 0.0618;
     /**
      * 回调收益率
      */
@@ -129,7 +129,7 @@ public class TradeServiceImpl implements TradeService {
     /**
      * 强制止损线
      */
-    private double stopLossLine = -0.08;
+    private double stopLossLine = -0.075;
     /**
      * rsi12做空激活点
      */
