@@ -101,14 +101,7 @@ public class TradeServiceImpl implements TradeService {
      * 最高盈利率
      */
     private BigDecimal highestUplRatio = BigDecimal.ZERO;
-//    /**
-//     * 最高做空点
-//     */
-//    private double highestHighRsi = 0;
-//    /**
-//     * 最低做空点
-//     */
-//    private double lowestLowRsi = 100;
+
     private double[] dClose = new double[Integer.parseInt(limit)];
     /**
      * 最小开仓资金
@@ -129,7 +122,7 @@ public class TradeServiceImpl implements TradeService {
     /**
      * 强制止损线
      */
-    private double stopLossLine = -0.0615;
+    private double stopLossLine = -0.0618;
     /**
      * rsi12做空激活点
      */
@@ -222,22 +215,12 @@ public class TradeServiceImpl implements TradeService {
         // 计算指标
         IndicatorDto indicatorDto = getIndicators(candlesticksArray);
         double rsi12 = indicatorDto.getRsi12();
-//		double rsi24 = indicatorDto.getRsi24();
-//		double[] rsi12Arr = indicatorDto.getRsi12Arr();
 
-//        if ((rsi12 > activateHighRsi12) && (rsi12 > highestHighRsi)) {
-//            highestHighRsi = rsi12;
-//            logger.info("highestHighRsi更新，当前为:{}", highestHighRsi);
-//        }
         boolean highActive = (rsi12 > activateHighRsi12) && (rsi12 < (activateHighRsi12 + activateRange));
         if (highActive) {
             doSell = true;
         }
 
-//        if ((rsi12 < activateLowRsi12) && (rsi12 < lowestLowRsi)) {
-//            lowestLowRsi = rsi12;
-//            logger.info("lowestLowRsi更新，当前为:{}", lowestLowRsi);
-//        }
         boolean lowActive = (rsi12 < activateLowRsi12) && (rsi12 > (activateLowRsi12 - activateRange));
         if (lowActive) {
             doBuy = true;
@@ -301,8 +284,6 @@ public class TradeServiceImpl implements TradeService {
             int resultCode = order.getIntValue(sCode);
             if (resultCode == 0) {
                 isPosition = true;
-//                lowestLowRsi = 100;
-//                highestHighRsi = 0;
                 doBuy = false;
                 doSell = false;
                 needReduce = false;
