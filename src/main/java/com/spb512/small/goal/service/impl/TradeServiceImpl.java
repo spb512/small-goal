@@ -122,15 +122,15 @@ public class TradeServiceImpl implements TradeService {
     /**
      * 强制止损线
      */
-    private double stopLossLine = -0.0618;
+    private double stopLossLine = -0.05;
     /**
      * rsi12做空激活点
      */
-    private double activateHighRsi12 = 81;
+    private double activateHighRsi12 = 82.5;
     /**
      * rsi12做多激活点
      */
-    private double activateLowRsi12 = 19;
+    private double activateLowRsi12 = 17.5;
     /**
      * 激活区间
      */
