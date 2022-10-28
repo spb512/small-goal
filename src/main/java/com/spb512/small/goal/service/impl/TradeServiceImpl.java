@@ -360,6 +360,7 @@ public class TradeServiceImpl implements TradeService {
             sell(uplRatioObject, uplRatio);
             //跳过15分钟
             skipNum = 900;
+            logger.info("暂停{}秒", skipNum);
         }
     }
 
