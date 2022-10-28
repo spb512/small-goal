@@ -101,7 +101,14 @@ public class TradeServiceImpl implements TradeService {
      * 最高盈利率
      */
     private BigDecimal highestUplRatio = BigDecimal.ZERO;
-
+    /**
+     * 最高做空点
+     */
+    private double highestHighRsi = 0;
+    /**
+     * 最低做空点
+     */
+    private double lowestLowRsi = 100;
     private double[] dClose = new double[Integer.parseInt(limit)];
     /**
      * 最小开仓资金
@@ -122,7 +129,7 @@ public class TradeServiceImpl implements TradeService {
     /**
      * 强制止损线
      */
-    private double stopLossLine = -0.1;
+    private double stopLossLine = -0.05;
     /**
      * rsi12做空激活点
      */
@@ -132,21 +139,9 @@ public class TradeServiceImpl implements TradeService {
      */
     private double activateLowRsi12 = 17;
     /**
-     * 激活区间
+     * 回调开仓点
      */
-    private double activateRange = 2;
-    /**
-     * 高极值
-     */
-    private double extremumHighRsi12 = 90;
-    /**
-     * 低极值
-     */
-    private double extremumLowRsi12 = 10;
-//    /**
-//     * 回调开仓点
-//     */
-//    private double pullbackRsi = 0.01;
+    private double pullbackRsi = 0.01;
     /**
      * 做多
      */
@@ -166,6 +161,11 @@ public class TradeServiceImpl implements TradeService {
      * 仅适用交割/永续
      */
     private String posMode = "net_mode";
+
+    /**
+     * 跳过num
+     */
+    private int skipNum = 0;
 
     @PostConstruct
     public void init() {
@@ -215,7 +215,11 @@ public class TradeServiceImpl implements TradeService {
         if (isPosition) {
             return;
         }
-
+        //是否跳过
+        if(skipNum > 0){
+            skipNum--;
+            return;
+        }
         // 查询k线数据(标记价格)
         JSONObject candlesticksSync = pbClient
                 .executeSync(marketDataApi.getMarkPriceCandlesticks(instId, null, null, bar, limit));
@@ -224,13 +228,19 @@ public class TradeServiceImpl implements TradeService {
         IndicatorDto indicatorDto = getIndicators(candlesticksArray);
         double rsi12 = indicatorDto.getRsi12();
 
-        boolean highActive = ((rsi12 > activateHighRsi12) && (rsi12 < (activateHighRsi12 + activateRange))) || (rsi12 > extremumHighRsi12);
-        if (highActive) {
+        if ((rsi12 > activateHighRsi12) && (rsi12 > highestHighRsi)) {
+            highestHighRsi = rsi12;
+            logger.info("highestHighRsi更新，当前为:{}", highestHighRsi);
+        }
+        if ((highestHighRsi > activateHighRsi12) && (highestHighRsi - rsi12 > pullbackRsi)) {
             doSell = true;
         }
 
-        boolean lowActive = ((rsi12 < activateLowRsi12) && (rsi12 > (activateLowRsi12 - activateRange))) || (rsi12 < extremumLowRsi12);
-        if (lowActive) {
+        if ((rsi12 < activateLowRsi12) && (rsi12 < lowestLowRsi)) {
+            lowestLowRsi = rsi12;
+            logger.info("lowestLowRsi更新，当前为:{}", lowestLowRsi);
+        }
+        if ((lowestLowRsi < activateLowRsi12) && (rsi12 - lowestLowRsi > pullbackRsi)) {
             doBuy = true;
         }
         if (doBuy || doSell) {
@@ -292,6 +302,8 @@ public class TradeServiceImpl implements TradeService {
             int resultCode = order.getIntValue(sCode);
             if (resultCode == 0) {
                 isPosition = true;
+                lowestLowRsi = 100;
+                highestHighRsi = 0;
                 doBuy = false;
                 doSell = false;
                 needReduce = false;
@@ -346,6 +358,8 @@ public class TradeServiceImpl implements TradeService {
         if (uplRatio.compareTo(BigDecimal.valueOf(stopLossLine)) < 0) {
             logger.info("达到强制止损线{}%", stopLossLine * 100);
             sell(uplRatioObject, uplRatio);
+            //跳过15分钟
+            skipNum = 900;
         }
     }
 
