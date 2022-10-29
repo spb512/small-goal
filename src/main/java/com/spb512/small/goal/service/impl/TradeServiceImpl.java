@@ -97,10 +97,10 @@ public class TradeServiceImpl implements TradeService {
      * 是否有持仓
      */
     private boolean isPosition = false;
-//    /**
-//     * 最高盈利率
-//     */
-//    private BigDecimal highestUplRatio = BigDecimal.ZERO;
+    /**
+     * 最高盈利率
+     */
+    private BigDecimal highestUplRatio = BigDecimal.ZERO;
 //    /**
 //     * 最高做空点
 //     */
@@ -122,10 +122,10 @@ public class TradeServiceImpl implements TradeService {
      * 收益率激活
      */
     private double activateRatio = 0.0618;
-//    /**
-//     * 回调收益率
-//     */
-//    private double pullbackRatio = 0.001;
+    /**
+     * 回调收益率
+     */
+    private double pullbackRatio = 0.001;
     /**
      * 强制止损线
      */
@@ -333,11 +333,11 @@ public class TradeServiceImpl implements TradeService {
         BigDecimal uplRatio = uplRatioObject.getBigDecimal("uplRatio");
 
         // 判断是否达到止盈止损条件
-//        if ((uplRatio.compareTo(BigDecimal.valueOf(activateRatio)) > -1) && (uplRatio.compareTo(highestUplRatio) > 0)) {
-//            highestUplRatio = uplRatio;
-//            logger.info("highestUplRatio更新，当前为:{}", highestUplRatio);
-//        }
-        if (uplRatio.compareTo(BigDecimal.valueOf(activateRatio)) > -1) {
+        if ((uplRatio.compareTo(BigDecimal.valueOf(activateRatio)) > -1) && (uplRatio.compareTo(highestUplRatio) > 0)) {
+            highestUplRatio = uplRatio;
+            logger.info("highestUplRatio更新，当前为:{}", highestUplRatio);
+        }
+        if ((highestUplRatio.compareTo(BigDecimal.valueOf(activateRatio)) > -1) && (uplRatio.compareTo(highestUplRatio.subtract(BigDecimal.valueOf(pullbackRatio))) < 1)) {
             sell(uplRatioObject, uplRatio);
         }
     }
@@ -416,7 +416,7 @@ public class TradeServiceImpl implements TradeService {
         JSONArray detailsArray = jsonObject.getJSONArray("details");
         JSONObject usdtBalance = detailsArray.getJSONObject(0);
         BigDecimal usdtCashBal = usdtBalance.getBigDecimal("cashBal");
-//        highestUplRatio = BigDecimal.ZERO;
+        highestUplRatio = BigDecimal.ZERO;
         if (closePosition.getIntValue(code) == 0) {
             isPosition = false;
         }
