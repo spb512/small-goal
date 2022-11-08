@@ -234,6 +234,7 @@ public class TradeServiceImpl implements TradeService {
 //        }
         if (rsi12 > activateHighRsi12) {
             doSell = true;
+            doBuy = false;
         }
 
 //        if ((rsi12 < activateLowRsi12) && (rsi12 < lowestLowRsi)) {
@@ -242,6 +243,7 @@ public class TradeServiceImpl implements TradeService {
 //        }
         if (rsi12 < activateLowRsi12) {
             doBuy = true;
+            doSell = false;
         }
         if (doBuy || doSell) {
             //再次确认是否有持仓
@@ -358,9 +360,6 @@ public class TradeServiceImpl implements TradeService {
         if (uplRatio.compareTo(BigDecimal.valueOf(stopLossLine)) < 0) {
             logger.info("达到强制止损线{}%", stopLossLine * 100);
             sell(uplRatioObject, uplRatio);
-            //跳过15分钟
-            skipNum = 900;
-            logger.info("暂停{}秒", skipNum);
         }
     }
 
@@ -425,6 +424,8 @@ public class TradeServiceImpl implements TradeService {
         logger.info("开仓均价:{};当前价格:{};当前收益率:{}", avgPx, markPx, uplRatio);
         logger.info("平仓操作code:{};msg:{};当前余额:{}", closePosition.getString(code),
                 closePosition.getString("msg"), usdtCashBal);
-        logger.info("<=====================分隔符=======================>");
+        //暂停
+        skipNum = 300;
+        logger.info("暂停{}秒<=====================分隔符=======================>", skipNum);
     }
 }
