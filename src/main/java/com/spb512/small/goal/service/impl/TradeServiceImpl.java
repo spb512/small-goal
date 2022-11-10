@@ -425,7 +425,7 @@ public class TradeServiceImpl implements TradeService {
         logger.info("平仓操作code:{};msg:{};当前余额:{}", closePosition.getString(code),
                 closePosition.getString("msg"), usdtCashBal);
         //暂停
-        skipNum = 900;
+        skipNum = 1800;
         logger.info("暂停{}秒<=====================分隔符=======================>", skipNum);
     }
 }
