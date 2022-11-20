@@ -133,11 +133,11 @@ public class TradeServiceImpl implements TradeService {
     /**
      * rsi12做空激活点
      */
-    private double activateHighRsi12 = 83;
+    private double activateHighRsi12 = 85;
     /**
      * rsi12做多激活点
      */
-    private double activateLowRsi12 = 17;
+    private double activateLowRsi12 = 15;
 //    /**
 //     * 回调开仓点
 //     */
