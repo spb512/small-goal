@@ -121,7 +121,7 @@ public class TradeServiceImpl implements TradeService {
     /**
      * 收益率激活
      */
-    private double activateRatio = 0.025;
+    private double activateRatio = 0.0512;
     /**
      * 回调收益率
      */
@@ -133,11 +133,11 @@ public class TradeServiceImpl implements TradeService {
     /**
      * rsi12做空激活点
      */
-    private double activateHighRsi12 = 80;
+    private double activateHighRsi12 = 85;
     /**
      * rsi12做多激活点
      */
-    private double activateLowRsi12 = 20;
+    private double activateLowRsi12 = 15;
 //    /**
 //     * 回调开仓点
 //     */
@@ -233,8 +233,8 @@ public class TradeServiceImpl implements TradeService {
 //            logger.info("highestHighRsi更新，当前为:{}", highestHighRsi);
 //        }
         if (rsi12 > activateHighRsi12) {
-            doSell = false;
-            doBuy = true;
+            doSell = true;
+            doBuy = false;
         }
 
 //        if ((rsi12 < activateLowRsi12) && (rsi12 < lowestLowRsi)) {
@@ -242,8 +242,8 @@ public class TradeServiceImpl implements TradeService {
 //            logger.info("lowestLowRsi更新，当前为:{}", lowestLowRsi);
 //        }
         if (rsi12 < activateLowRsi12) {
-            doBuy = false;
-            doSell = true;
+            doBuy = true;
+            doSell = false;
         }
         if (doBuy || doSell) {
             //再次确认是否有持仓
