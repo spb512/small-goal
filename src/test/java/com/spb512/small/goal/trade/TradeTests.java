@@ -1,13 +1,13 @@
 package com.spb512.small.goal.trade;
 
 import com.spb512.small.goal.service.TradeService;
+import jakarta.annotation.Resource;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
 
-import javax.annotation.Resource;
 
 /**
  * @author spb512

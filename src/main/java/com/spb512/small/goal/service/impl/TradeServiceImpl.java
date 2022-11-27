@@ -18,12 +18,12 @@ import com.spb512.small.goal.utils.PrivateClient;
 import com.spb512.small.goal.utils.PublicClient;
 import com.spb512.small.goal.utils.talib.FinStratEntity;
 import com.spb512.small.goal.utils.talib.FinStratModel;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import java.math.BigDecimal;
 
 /**
@@ -101,7 +101,7 @@ public class TradeServiceImpl implements TradeService {
      * 最高盈利率
      */
     private BigDecimal highestUplRatio = BigDecimal.ZERO;
-//    /**
+    //    /**
 //     * 最高做空点
 //     */
 //    private double highestHighRsi = 0;
@@ -216,7 +216,7 @@ public class TradeServiceImpl implements TradeService {
             return;
         }
         //是否跳过
-        if(skipNum > 0){
+        if (skipNum > 0) {
             skipNum--;
             return;
         }
